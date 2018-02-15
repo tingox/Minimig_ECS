@@ -47,41 +47,28 @@ entity """ + modulename + """ is
 	(
 		clk: in std_logic;
 		addr_a: in std_logic_vector((addr_width-1) downto 0);
-		we_a: in std_logic_vector(1 downto 0) := "00"; -- write byte enable 
+		we_a: in std_logic_vector(1 downto 0) := "00";
 		data_in_a: in std_logic_vector((data_width-1) downto 0);
-		data_out_a: out std_logic_vector((data_width -1) downto 0)
+		data_out_a: out std_logic_vector((data_width-1) downto 0)
 	);
 end """ + modulename + """;
 
 architecture rtl of """ + modulename + """ is
-        signal R_data_out_a: std_logic_vector((data_width -1) downto 0);
 	-- Build a 2-D array type for the RAM
-	subtype byte_t is std_logic_vector(7 downto 0);
-	type memory_t is array(0 to 2**addr_width-1) of byte_t;
+	subtype data_t is std_logic_vector((data_width-1) downto 0);
+	type memory_t is array(0 to 2**addr_width-1) of data_t;
 
 	-- Declare the RAM
 """)
 
 last = array_len-1
 
-fout.write("shared variable ram_l: memory_t := (");
+fout.write("shared variable ram: memory_t := (");
 if datasize == 2:
  for i in range(0, array_len):
   if (i % 8) == 0:
     fout.write("\n")
-  fout.write("x\"%02x\"" % (data[2*i+1],) )
-  if i != fitsize-1:
-    fout.write(",")
-if array_len < fitsize:
-  fout.write("\nothers => (others => '0')");
-fout.write(");\n")
-
-fout.write("shared variable ram_h: memory_t := (");
-if datasize == 2:
- for i in range(0, array_len):
-  if (i % 8) == 0:
-    fout.write("\n")
-  fout.write("x\"%02x\"" % (data[2*i+0],) )
+  fout.write("x\"%02x%02x\"" % (data[2*i+0],data[2*i+1],) )
   if i != fitsize-1:
     fout.write(",")
 if array_len < fitsize:
@@ -96,12 +83,12 @@ begin
 	begin
 	if(rising_edge(clk)) then
 	    if(we_a(0) = '1') then
-		ram_l(conv_integer(addr_a)) := data_in_a(7 downto 0);
+		ram(conv_integer(addr_a))(7 downto 0) := data_in_a(7 downto 0);
 	    end if;
 	    if(we_a(1) = '1') then
-		ram_h(conv_integer(addr_a)) := data_in_a(15 downto 8);
+		ram(conv_integer(addr_a))(15 downto 8) := data_in_a(15 downto 8);
 	    end if;
-	    data_out_a <= ram_h(conv_integer(addr_a)) & ram_l(conv_integer(addr_a));
+	    data_out_a <= ram(conv_integer(addr_a));
 	end if;
 	end process;
 	end generate;
@@ -110,16 +97,15 @@ begin
 	process(clk)
 	begin
 	if(rising_edge(clk)) then 
-	    R_data_out_a <= ram_h(conv_integer(addr_a)) & ram_l(conv_integer(addr_a));
+	    data_out_a <= ram(conv_integer(addr_a));
 	    if(we_a(0) = '1') then
-		ram_l(conv_integer(addr_a)) := data_in_a(7 downto 0);
+		ram(conv_integer(addr_a))(7 downto 0) := data_in_a(7 downto 0);
 	    end if;
 	    if(we_a(1) = '1') then
-		ram_h(conv_integer(addr_a)) := data_in_a(15 downto 8);
+		ram(conv_integer(addr_a))(15 downto 8) := data_in_a(15 downto 8);
 	    end if;
 	end if;
 	end process;
-	data_out_a <= R_data_out_a;
 	end generate;
 end rtl;
 """);
