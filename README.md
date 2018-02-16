@@ -1,6 +1,6 @@
 # ULX3S port of Amiga emulator "Minimig"
 
-I started from Minimig_ECS for Fleasystems "Ohm" board.
+Started from Minimig_ECS for Fleasystems "Ohm" board.
 
 Keyboard driver modified not to control keyboard LEDs
 to avoid compatibility issues with various keyboard.
