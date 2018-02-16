@@ -267,19 +267,19 @@ begin
 
 	u2 : entity work.ddr_out_emard
     port map (iclkp=>clk, iclkn=>clk_n, ireset=>'0',
-        idata(1 downto 0)=>shift_red(1 downto 0), odata=>red_s); 
+        idata(1 downto 0)=>shift_red(1 downto 0), odata=>red_s(0)); 
 		 
 	u3 : entity work.ddr_out_emard
     port map (iclkp=>clk, iclkn=>clk_n, ireset=>'0',
-        idata(1 downto 0)=>shift_green(1 downto 0), odata=>green_s); 
+        idata(1 downto 0)=>shift_green(1 downto 0), odata=>green_s(0)); 
 		
 	u4 : entity work.ddr_out_emard
     port map (iclkp=>clk, iclkn=>clk_n, ireset=>'0',
-        idata(1 downto 0)=>shift_blue(1 downto 0), odata=>blue_s);			
+        idata(1 downto 0)=>shift_blue(1 downto 0), odata=>blue_s(0));			
 
 	u5 : entity work.ddr_out_emard
     port map (iclkp=>clk, iclkn=>clk_n, ireset=>'0',
-        idata(1 downto 0)=>shift_clock(1 downto 0), odata=>clock_s);
+        idata(1 downto 0)=>shift_clock(1 downto 0), odata=>clock_s(0));
 
   -- add optional inversion of the output bits
   out_red   <= not shift_red(1 downto 0)   when Invert_Red   else shift_red(1 downto 0);
