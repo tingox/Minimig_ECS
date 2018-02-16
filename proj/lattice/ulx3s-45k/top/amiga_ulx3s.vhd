@@ -1,5 +1,5 @@
 ----------------------------
--- ULX3S Top level for SNAKE
+-- ULX3S Top level for MINIMIG
 -- http://github.com/emard
 ----------------------------
 
