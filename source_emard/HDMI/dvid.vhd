@@ -61,10 +61,17 @@ entity dvid is
            TMDSWord_Green: out std_logic_vector(9 downto 0);
            TMDSWord_Blue : out std_logic_vector(9 downto 0);
 
+           -- DDR single-ended signals (2 bits each)
+           dvid_red     : out STD_LOGIC_VECTOR (1 downto 0);
+           dvid_green   : out STD_LOGIC_VECTOR (1 downto 0);
+           dvid_blue    : out STD_LOGIC_VECTOR (1 downto 0);
+           dvid_clock   : out STD_LOGIC_VECTOR (1 downto 0);
+
+           -- LVDS buffered signals
            red_s     : out STD_LOGIC_VECTOR (0 downto 0);
            green_s   : out STD_LOGIC_VECTOR (0 downto 0);
            blue_s    : out STD_LOGIC_VECTOR (0 downto 0);
-           clock_s   : out STD_LOGIC_VECTOR (0 downto 0)); 
+           clock_s   : out STD_LOGIC_VECTOR (0 downto 0));
 end dvid;
 
 architecture Behavioral of dvid is
@@ -287,6 +294,11 @@ begin
   out_blue  <= not shift_blue(1 downto 0)  when Invert_Blue  else shift_blue(1 downto 0);
   out_clock <= not shift_clock(1 downto 0) when Invert_Clock else shift_clock(1 downto 0);
  
+  dvid_red <= out_red;
+  dvid_green <= out_green;
+  dvid_blue <= out_blue;
+  dvid_clock <= out_clock;
+
   -- select between the output of the various encoders
   process(clk_pixel, clk_pixel_en)
   begin

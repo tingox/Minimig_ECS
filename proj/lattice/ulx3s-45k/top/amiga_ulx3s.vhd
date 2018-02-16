@@ -14,7 +14,8 @@ use ecp5u.components.all;
 entity amiga_ulx3s is
 generic
 (
-  C_flea_av: boolean := false -- use original flea's hdmi audio/video, false: use emard's audio/video
+  C_flea_av: boolean := false; -- use original flea's hdmi audio/video, false: use emard's audio/video
+  C_flea_hdmi_audio: boolean := false -- great for digital TV's but incompatible for most PC monitors
 );
 port
 (
@@ -370,6 +371,12 @@ end process;
   right_sampled <= rightdatasum(14 downto 0) & '0';
 	
   Inst_DVI: entity work.dvid 
+  --GENERIC MAP (
+  --  Invert_Red => true,
+  --  Invert_Green => true,
+  --  Invert_Blue => true,
+  --  Invert_Clock => true
+  --)
   PORT MAP (
     clk		  => clk_dvi,
     clk_n         => clk_dvin,	 
@@ -382,7 +389,7 @@ end process;
     blank         => blank,
     hsync         => dvi_hsync, 
     vsync         => dvi_vsync,
-	EnhancedMode  => true,
+	EnhancedMode  => C_flea_hdmi_audio,
 	IsProgressive  => true, 
 	IsPAL  		  => true, 
 	Is30kHz  	  => true,
@@ -392,6 +399,10 @@ end process;
 	HDMI_audio_R  => right_sampled,
 	HDMI_LeftEnable  => l_audio_ena,
 	HDMI_RightEnable => l_audio_ena,
+    dvid_red      => dvid_red,
+    dvid_green    => dvid_green,
+    dvid_blue     => dvid_blue,
+    dvid_clock    => dvid_clock,
     red_s         => LVDS_Red,
     green_s       => LVDS_Green, 
     blue_s        => LVDS_Blue,
@@ -421,13 +432,37 @@ begin
   end if;
 end process;
 
-gpdi_dp(2) <= LVDS_Red(0);
+  -- this module instantiates vendor specific modules ddr_out to
+  -- convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
+  G_vgatext_ddrout_flea: entity work.ddr_dvid_out_se
+  port map
+  (
+    clk       => clk_pixel_shift,
+    clk_n     => clkn_pixel_shift,
+    in_red    => dvid_red,
+    in_green  => dvid_green,
+    in_blue   => dvid_blue,
+    in_clock  => dvid_clock,
+    out_red   => ddr_d(2),
+    out_green => ddr_d(1),
+    out_blue  => ddr_d(0),
+    out_clock => ddr_clk
+  );
+
+  gpdi_data_channels_flea: for i in 0 to 2 generate
+    gpdi_diff_data: OLVDS
+    port map(A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
+  end generate;
+  gpdi_diff_clock_flea: OLVDS
+  port map(A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
+
+--gpdi_dp(2) <= LVDS_Red(0);
 --gpdi_dn(2) <= not LVDS_Red(0);
-gpdi_dp(1) <= LVDS_Green(0);
+--gpdi_dp(1) <= LVDS_Green(0);
 --gpdi_dn(1) <= not LVDS_Green(0);
-gpdi_dp(0) <= LVDS_Blue(0);
+--gpdi_dp(0) <= LVDS_Blue(0);
 --gpdi_dn(0) <= not LVDS_Blue(0);
-gpdi_clkp <= LVDS_ck(0);
+--gpdi_clkp <= LVDS_ck(0);
 --gpdi_clkn <= not LVDS_ck(0);
 end generate;
 
