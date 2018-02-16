@@ -1,4 +1,4 @@
-# ULX3S port
+# ULX3S port of Amiga emulator "Minimig"
 
 Keyboard driver modified not to control keyboard LEDs
 to avoid compatibility issues with various keyboard.
