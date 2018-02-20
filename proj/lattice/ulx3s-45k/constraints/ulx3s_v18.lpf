@@ -184,10 +184,12 @@ LOCATE COMP "ant_433mhz" SITE "G1";
 IOBUF  PORT "ant_433mhz" PULLMODE=NONE IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## Second USB port going directly into FPGA "usb", "ram" sheet
+# PS/2 function: PULLMODE=UP
+# USB-HID function: PULLMODE=DOWN
 LOCATE COMP "usb_fpga_dp" SITE "E16";
 LOCATE COMP "usb_fpga_dn" SITE "F16";
-IOBUF  PORT "usb_fpga_dp" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
-IOBUF  PORT "usb_fpga_dn" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "usb_fpga_dp" PULLMODE=DOWN IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "usb_fpga_dn" PULLMODE=DOWN IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## JTAG ESP-32 "usb" sheet
 # connected to FT231X and ESP-32

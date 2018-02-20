@@ -98,8 +98,10 @@ end;
 architecture struct of amiga_ulx3s is
 	-- FLEA OHM aliasing
 	-- keyboard
-	alias ps2_clk1 : std_logic is usb_fpga_dp;
-	alias ps2_data1 : std_logic is usb_fpga_dn;
+	--alias ps2_clk1 : std_logic is usb_fpga_dp;
+	--alias ps2_data1 : std_logic is usb_fpga_dn;
+	alias ps2_clk1 : std_logic is gp(0);
+	alias ps2_data1 : std_logic is gn(0);
 	signal PS_enable: std_logic; -- dummy on ulx3s v1.7.x
         -- mouse
 	alias ps2_clk2 : std_logic is gp(1);
@@ -127,6 +129,7 @@ architecture struct of amiga_ulx3s is
 
 	signal clk  : std_logic := '0';	
 	signal clk7m  : std_logic := '0';
+	signal clk7m5  : std_logic := '0';
 	signal clk28m  : std_logic := '0';   
 
  
@@ -207,32 +210,101 @@ architecture struct of amiga_ulx3s is
 	alias clk_pixel_shift: std_logic is clk_dvi;
 	alias clkn_pixel_shift: std_logic is clk_dvin;
 	-- end emard AV
+	
+	-- emard usb hid joystick
+  signal S_hid_reset: std_logic;
+  signal S_hid_report: std_logic_vector(63 downto 0);
+  alias S_lstick_x: std_logic_vector(7 downto 0) is S_hid_report(15 downto 8);
+  alias S_lstick_y: std_logic_vector(7 downto 0) is S_hid_report(23 downto 16);
+  alias S_rstick_x: std_logic_vector(7 downto 0) is S_hid_report(31 downto 24);
+  alias S_rstick_y: std_logic_vector(7 downto 0) is S_hid_report(39 downto 32);
+  alias S_analog_trigger: std_logic_vector(5 downto 0) is S_hid_report(45 downto 40);
+  alias S_btn_x: std_logic is S_hid_report(46);
+  alias S_btn_a: std_logic is S_hid_report(47);
+  alias S_btn_b: std_logic is S_hid_report(48);
+  alias S_btn_y: std_logic is S_hid_report(49);
+  alias S_btn_left_bumper: std_logic is S_hid_report(50);
+  alias S_btn_right_bumper: std_logic is S_hid_report(51);
+  alias S_btn_left_trigger: std_logic is S_hid_report(52);
+  alias S_btn_right_trigger: std_logic is S_hid_report(53);
+  alias S_btn_back: std_logic is S_hid_report(54);
+  alias S_btn_start: std_logic is S_hid_report(55);
+  alias S_btn_left_pad: std_logic is S_hid_report(56);
+  alias S_btn_right_pad: std_logic is S_hid_report(57);
+  alias S_btn_fps: std_logic is S_hid_report(58);
+  alias S_btn_fps_toggle: std_logic is S_hid_report(59);
+  alias S_hat: std_logic_vector(3 downto 0) is S_hid_report(63 downto 60);
+  signal S_hat_udlr: std_logic_vector(3 downto 0); -- decoded
+  alias S_hat_up: std_logic is S_hat_udlr(3);
+  alias S_hat_down: std_logic is S_hat_udlr(2);
+  alias S_hat_left: std_logic is S_hat_udlr(1);
+  alias S_hat_right: std_logic is S_hat_udlr(0);
+  
+  -- decoded stick to digital
+  signal S_lstick_up, S_lstick_down, S_lstick_left, S_lstick_right: std_logic;
+  signal S_rstick_up, S_rstick_down, S_rstick_left, S_rstick_right: std_logic;
+	-- end emard usb hid joystick
 
 begin
   wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
   led(0) <= btn(0); -- visual indication of btn press
   -- btn(0) has inverted logic
   sys_reset <= btn(0);
+  s_hid_reset <= not btn(0);
   sd_dat1_irq <= '1';
   sd_dat2 <= '1';
 
 	-- Housekeeping logic for unwanted peripherals on FleaFPGA Ohm board goes here..
 	-- (Note: comment out any of the following code lines if peripheral is required)
 
--- Joystick bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
-n_joy1(3)<= GP(4) ; -- up
-n_joy1(2)<= GP(7) ; -- down
-n_joy1(1)<= GP(8) ; -- left
-n_joy1(0)<= GP(9) ; -- right
-n_joy1(4)<= GP(10) ; -- fire
-n_joy1(5)<= GP(11) ; -- fire2
+  usb_saitek_inst: entity USB_saitek
+  port map
+  (
+    clk7_5MHz => clk7m5, -- must be 7.5 MHz
+    reset => S_hid_reset,
+    usb_data(1) => usb_fpga_dp,
+    usb_data(0) => usb_fpga_dn,
+    hid_report => S_hid_report,
+    leds => open -- debug
+  );
 
-n_joy2(3)<= GP(15) ; -- up
-n_joy2(2)<= GP(17) ; -- down
-n_joy2(1)<= GP(18) ; -- left 
-n_joy2(0)<= GP(22) ; -- right  
-n_joy2(4)<= GP(23) ; -- fire
-n_joy2(5)<= GP(24) ; -- fire2 
+  -- hat decoder  
+  S_hat_udlr <= "1000" when S_hat = "0000" else -- up
+                "1001" when S_hat = "0001" else -- up+right
+                "0001" when S_hat = "0010" else -- right
+                "0101" when S_hat = "0011" else -- down+right
+                "0100" when S_hat = "0100" else -- down
+                "0110" when S_hat = "0101" else -- down+left
+                "0010" when S_hat = "0110" else -- left
+                "1010" when S_hat = "0111" else -- up+left
+                "0000";          -- "1111" when not pressed
+  -- analog stick to digital decoders
+  S_lstick_left  <= '1' when S_lstick_x(7 downto 6) = "00" else '0';
+  S_lstick_right <= '1' when S_lstick_x(7 downto 6) = "11" else '0';
+  S_lstick_up    <= '1' when S_lstick_y(7 downto 6) = "00" else '0';
+  S_lstick_down  <= '1' when S_lstick_y(7 downto 6) = "11" else '0';
+  S_rstick_left  <= '1' when S_rstick_x(7 downto 6) = "00" else '0';
+  S_rstick_right <= '1' when S_rstick_x(7 downto 6) = "11" else '0';
+  S_rstick_up    <= '1' when S_rstick_y(7 downto 6) = "00" else '0';
+  S_rstick_down  <= '1' when S_rstick_y(7 downto 6) = "11" else '0';
+
+  led(4 downto 1) <= S_btn_y & S_btn_a & S_btn_x & S_btn_b;
+
+-- Joystick bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
+-- inverted logic: joystick switches pull down when pressed
+n_joy1(3)<= not (S_hat_up    or S_lstick_up);    -- up
+n_joy1(2)<= not (S_hat_down  or S_lstick_down);  -- down
+n_joy1(1)<= not (S_hat_left  or S_lstick_left);  -- left
+n_joy1(0)<= not (S_hat_right or S_lstick_right); -- right
+n_joy1(4)<= not S_btn_left_trigger; -- fire
+n_joy1(5)<= not S_btn_left_bumper ; -- fire2
+
+n_joy2(3)<= not (S_btn_y  or S_rstick_up);       -- up
+n_joy2(2)<= not (S_btn_a  or S_rstick_down);     -- down
+n_joy2(1)<= not (S_btn_x  or S_rstick_left);     -- left 
+n_joy2(0)<= not (S_btn_b  or S_rstick_right);    -- right  
+n_joy2(4)<= not S_btn_right_trigger; -- fire
+n_joy2(5)<= not S_btn_right_bumper;  -- fire2 
 
 -- Video output horizontal scanrate select 15/30kHz select via GPIO header
 -- n_15khz <= GP(21) ; -- Default is 30kHz video out if pin left unconnected. Connect to GND for 15kHz video.
@@ -251,6 +323,7 @@ n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz v
   
 	-- User HDL project modules and port mappings go here..
 
+	orig_clocks: if false generate
 	u0 : entity work.C64_clock
 	port map(
 		CLKI			=>	sys_clock,
@@ -268,7 +341,30 @@ n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz v
 		CLKOP			=>	open, -- 112.5MHz
 		CLKOS			=>	clk_dvi, -- 140.625 MHz
 		CLKOS2			=>	clk_dvin -- 140.625 MHz
-		);  		
+		);
+        end generate;
+
+	usb_clocks: if true generate
+	u0 : entity work.C64_clock
+	port map(
+		CLKI			=>	sys_clock,
+		CLKOP			=>	clk,
+		
+		CLKOS			=>	sdram_clk,
+		CLKOS2			=>	clk28m,
+		CLKOS3			=>	clk7m,
+		LOCK			=>  pll_locked
+		);  
+		
+	u01 : entity work.clk_25M_112M5_140Mp_140Mn_7M5
+	port map(
+		CLKI			=>	sys_clock,
+		CLKOP			=>	open,     -- 112.5MHz
+		CLKOS			=>	clk_dvi,  -- 140.625 MHz
+		CLKOS2			=>	clk_dvin, -- 140.625 MHz
+		CLKOS3			=>	clk7m5    --   7.5   MHz (USB)
+		);
+        end generate;
 
 reset_combo1 <=	sys_reset and pll_locked;
 		
