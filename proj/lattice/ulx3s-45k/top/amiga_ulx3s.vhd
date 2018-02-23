@@ -100,12 +100,16 @@ architecture struct of amiga_ulx3s is
 	-- keyboard
 	--alias ps2_clk1 : std_logic is usb_fpga_dp;
 	--alias ps2_data1 : std_logic is usb_fpga_dn;
-	alias ps2_clk1 : std_logic is gp(0);
-	alias ps2_data1 : std_logic is gn(0);
+	--alias ps2_clk1 : std_logic is gp(0);
+	--alias ps2_data1 : std_logic is gn(0);
+	signal ps2_clk1 : std_logic := '1';
+	signal ps2_data1 : std_logic := '1';
 	signal PS_enable: std_logic; -- dummy on ulx3s v1.7.x
         -- mouse
-	alias ps2_clk2 : std_logic is gp(1);
-	alias ps2_data2 : std_logic is gn(1);
+	--alias ps2_clk2 : std_logic is gp(1);
+	--alias ps2_data2 : std_logic is gn(1);
+	signal ps2_clk2 : std_logic := '1';
+	signal ps2_data2 : std_logic := '1';
 
 	alias sys_clock: std_logic is clk_25MHz;
 	alias slave_rx_i: std_logic is ftdi_txd;
@@ -257,7 +261,7 @@ begin
 	-- Housekeeping logic for unwanted peripherals on FleaFPGA Ohm board goes here..
 	-- (Note: comment out any of the following code lines if peripheral is required)
 
-  usb_saitek_inst: entity USB_saitek
+  usbhid_host_inst: entity usbhid_host
   port map
   (
     clk7_5MHz => clk7m5, -- must be 7.5 MHz
@@ -288,29 +292,33 @@ begin
   S_rstick_up    <= '1' when S_rstick_y(7 downto 6) = "00" else '0';
   S_rstick_down  <= '1' when S_rstick_y(7 downto 6) = "11" else '0';
 
-  led(4 downto 1) <= S_btn_y & S_btn_a & S_btn_x & S_btn_b;
+  process(clk7m5)
+  begin
+    if rising_edge(clk7m5) then
+      -- Joystick bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
+      -- inverted logic: joystick switches pull down when pressed
+      n_joy1(3) <= not (S_hat_up    or S_lstick_up);          -- up
+      n_joy1(2) <= not (S_hat_down  or S_lstick_down);        -- down
+      n_joy1(1) <= not (S_hat_left  or S_lstick_left);        -- left
+      n_joy1(0) <= not (S_hat_right or S_lstick_right);       -- right
+      n_joy1(4) <= not (S_btn_left_trigger);                  -- fire
+      n_joy1(5) <= not (S_btn_left_bumper);                   -- fire2
 
--- Joystick bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
--- inverted logic: joystick switches pull down when pressed
-n_joy1(3)<= not (S_hat_up    or S_lstick_up);    -- up
-n_joy1(2)<= not (S_hat_down  or S_lstick_down);  -- down
-n_joy1(1)<= not (S_hat_left  or S_lstick_left);  -- left
-n_joy1(0)<= not (S_hat_right or S_lstick_right); -- right
-n_joy1(4)<= not S_btn_left_trigger; -- fire
-n_joy1(5)<= not S_btn_left_bumper ; -- fire2
+      n_joy2(3) <= not (btn(3) or S_btn_y or S_rstick_up);    -- up
+      n_joy2(2) <= not (btn(4) or S_btn_a or S_rstick_down);  -- down
+      n_joy2(1) <= not (btn(5) or S_btn_x or S_rstick_left);  -- left
+      n_joy2(0) <= not (btn(6) or S_btn_b or S_rstick_right); -- right
+      n_joy2(4) <= not (btn(1) or S_btn_right_trigger);       -- fire
+      n_joy2(5) <= not (btn(2) or S_btn_right_bumper);        -- fire2
+    end if;
+  end process;
+  led(6 downto 1) <= not n_joy2;
 
-n_joy2(3)<= not (S_btn_y  or S_rstick_up);       -- up
-n_joy2(2)<= not (S_btn_a  or S_rstick_down);     -- down
-n_joy2(1)<= not (S_btn_x  or S_rstick_left);     -- left 
-n_joy2(0)<= not (S_btn_b  or S_rstick_right);    -- right  
-n_joy2(4)<= not S_btn_right_trigger; -- fire
-n_joy2(5)<= not S_btn_right_bumper;  -- fire2 
+  -- Video output horizontal scanrate select 15/30kHz select via GPIO header
+  -- n_15khz <= GP(21) ; -- Default is 30kHz video out if pin left unconnected. Connect to GND for 15kHz video.
+  n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
 
--- Video output horizontal scanrate select 15/30kHz select via GPIO header
--- n_15khz <= GP(21) ; -- Default is 30kHz video out if pin left unconnected. Connect to GND for 15kHz video.
-n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
-
--- PS/2 Keyboard and Mouse definitions
+  -- PS/2 Keyboard and Mouse definitions
 	ps2k_dat_in<=PS2_data1;
 	PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
 	ps2k_clk_in<=PS2_clk1;
