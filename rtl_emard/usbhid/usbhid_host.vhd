@@ -253,7 +253,19 @@ process(CLK7_5MHz) is
 	end procedure;
 	
 	variable time_out:boolean:=false;
-	
+
+	procedure startup_init is
+	begin
+	  step_ps3:=0;
+	  next_cmd:=false;
+	  counter_RESET:=0;
+	  counter_IDLE:=0;
+	  counter_PAS:=0;
+	  counter_SOF_stuff:=0;
+	  counter_TRAME:=0;
+	end procedure;
+
+
 	procedure sof_init is
 	begin
 		counter_RESET:=0;
@@ -1428,8 +1440,7 @@ if next_cmd then
 else
   if reset='1' then
     step_cmd <= 0;
-    step_ps3 := 0;
-    sof_init;
+    startup_init;
   end if;
 end if;
 
