@@ -10,6 +10,8 @@ use work.usb_req_gen_func_pack.ALL;
 -- Saitek Cyborg Rumble Joystick
 -- USB low-speed HID device
 
+-- minimal configuration, it works!
+
 package hid_enum_pack is
 
 -- packet types
@@ -46,21 +48,11 @@ constant C_ADDR1_ENDP1: std_logic_vector(11+5-1 downto 0) := usb_token_gen("0001
 -- and at the end of this file, modify state machine to replay those packets to the joystick
 
 constant C_GET_DESCRIPTOR_DEVICE_40h  : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"80_06_00_01_00_00_40_00");
-constant C_URB_CONTROL_OUT_3_4h       : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"23_03_04_00_01_00_00_00");
-constant C_URB_CONTROL_IN_4h          : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"A3_00_00_00_01_00_04_00");
-constant C_URB_CONTROL_OUT_1_14h      : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"23_01_14_00_01_00_00_00");
-constant C_GET_DESCRIPTOR_DEVICE_12h  : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"80_06_00_01_00_00_12_00");
-constant C_GET_DESCRIPTOR_CONFIG_09h  : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"80_06_00_02_00_00_09_00");
-constant C_GET_DESCRIPTOR_CONFIG_29h  : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"80_06_00_02_00_00_29_00");
-constant C_GET_DESCRIPTOR_STRING_0_FFh: std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"80_06_00_03_00_00_FF_00");
-constant C_GET_DESCRIPTOR_STRING_1_FFh: std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"80_06_01_03_09_04_FF_00");
-constant C_GET_DESCRIPTOR_STRING_2_FFh: std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"80_06_02_03_09_04_FF_00");
 constant C_SET_CONFIGURATION_1        : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"00_09_01_00_00_00_00_00");
-constant C_SET_IDLE_0                 : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"21_0A_00_00_00_00_00_00");
-constant C_GET_DESCRIPTOR_REPORT_277h : std_logic_vector(11*8-1 downto 0) := usb_data_gen(C_DATA0 & x"81_06_00_22_00_00_77_02");
 -- final token that will read HID reports
 constant C_PLUG_TOKEN: std_logic_vector(11+5-1 downto 0) := C_ADDR0_ENDP1;
 constant bInterval: std_logic_vector(7 downto 0) := x"01"; -- HID report interval, lower value means faster
+constant C_IDLE_REPORT: std_logic_vector(63 downto 0) := x"70_00_00_80_80_80_80_00"; -- report when unplugged
 
 type T_usb_message is
 record
@@ -68,7 +60,7 @@ record
     token:      std_logic_vector(15 downto 0); -- usb token 16-bit (5-bit crc included)
     data:       std_logic_vector(87 downto 0); -- usb data 88-bit (16-bit crc included)
 end record;
-type T_usb_enum_sequence is array (0 to 8) of T_usb_message;
+type T_usb_enum_sequence is array (0 to 1) of T_usb_message;
 constant C_usb_enum_sequence: T_usb_enum_sequence :=
   (
     ( -- 0
@@ -77,44 +69,9 @@ constant C_usb_enum_sequence: T_usb_enum_sequence :=
       data      =>  C_GET_DESCRIPTOR_DEVICE_40h
     ),
     ( -- 1
-      usbpacket =>  C_usbpacket_read,
-      token     =>  C_ADDR0_ENDP0,
-      data      =>  C_GET_DESCRIPTOR_DEVICE_12h
-    ),
-    ( -- 2
-      usbpacket =>  C_usbpacket_read,
-      token     =>  C_ADDR0_ENDP0,
-      data      =>  C_GET_DESCRIPTOR_CONFIG_09h
-    ),
-    ( -- 3
-      usbpacket =>  C_usbpacket_read,
-      token     =>  C_ADDR0_ENDP0,
-      data      =>  C_GET_DESCRIPTOR_CONFIG_29h
-    ),
-    ( -- 4
-      usbpacket =>  C_usbpacket_read,
-      token     =>  C_ADDR0_ENDP0,
-      data      =>  C_GET_DESCRIPTOR_STRING_0_FFh
-    ),
-    ( -- 5
-      usbpacket =>  C_usbpacket_read,
-      token     =>  C_ADDR0_ENDP0,
-      data      =>  C_GET_DESCRIPTOR_STRING_1_FFh
-    ),
-    ( -- 6
-      usbpacket =>  C_usbpacket_read,
-      token     =>  C_ADDR0_ENDP0,
-      data      =>  C_GET_DESCRIPTOR_STRING_2_FFh
-    ),
-    ( -- 7
       usbpacket =>  C_usbpacket_set,
       token     =>  C_ADDR0_ENDP0,
       data      =>  C_SET_CONFIGURATION_1
-    ),
-    ( -- 8
-      usbpacket =>  C_usbpacket_read,
-      token     =>  C_ADDR0_ENDP0,
-      data      =>  C_GET_DESCRIPTOR_REPORT_277h
     )
   );
 end;
