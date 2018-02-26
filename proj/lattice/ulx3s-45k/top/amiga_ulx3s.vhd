@@ -273,8 +273,8 @@ begin
   usbhid_report_decoder_inst: entity usbhid_report_decoder
   generic map
   (
-    C_mousex_scaler => 23, -- less -> faster mouse
-    C_mousey_scaler => 23  -- less -> faster mouse
+    C_mousex_scaler => 22, -- less -> faster mouse
+    C_mousey_scaler => 22  -- less -> faster mouse
   )
   port map
   (
@@ -328,12 +328,12 @@ begin
       -- Joystick2 port used as joystick (left stick, keys abxy, right trigger/bumper)
       -- Joystick2 bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
       -- inverted logic: joystick switches pull down when pressed
-      n_joy2(5) <= not (          S_btn_right_trigger);       -- fire2
-      n_joy2(4) <= not (btn(2) or S_btn_right_bumper);        -- fire
-      n_joy2(3) <= not (btn(3) or S_btn_y or S_lstick_up);    -- up
-      n_joy2(2) <= not (btn(4) or S_btn_a or S_lstick_down);  -- down
-      n_joy2(1) <= not (btn(5) or S_btn_x or S_lstick_left);  -- left
-      n_joy2(0) <= not (btn(6) or S_btn_b or S_lstick_right); -- right
+      n_joy2(5) <= not (          S_btn_right_bumper);  -- fire2
+      n_joy2(4) <= not (btn(2) or S_btn_right_trigger or S_btn_back); -- fire
+      n_joy2(3) <= not (btn(3) or S_btn_y or S_lstick_up   );     -- up
+      n_joy2(2) <= not (btn(4) or S_btn_a or S_lstick_down );   -- down
+      n_joy2(1) <= not (btn(5) or S_btn_x or S_lstick_left );   -- left
+      n_joy2(0) <= not (btn(6) or S_btn_b or S_lstick_right);  -- right
     end if;
   end process;
   led(6 downto 1) <= not n_joy2;
