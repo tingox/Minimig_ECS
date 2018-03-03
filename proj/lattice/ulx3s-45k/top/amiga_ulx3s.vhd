@@ -11,6 +11,9 @@ use IEEE.numeric_std.all;
 library ecp5u;
 use ecp5u.components.all;
 
+-- package for usb joystick report decoded structure
+use work.report_decoded_pack.all;
+
 entity amiga_ulx3s is
 generic
 (
@@ -218,33 +221,7 @@ architecture struct of amiga_ulx3s is
 	-- emard usb hid joystick
 	signal S_hid_reset: std_logic;
 	signal S_hid_report: std_logic_vector(63 downto 0);
-	signal S_lstick_x: std_logic_vector(7 downto 0);
-	signal S_lstick_y: std_logic_vector(7 downto 0);
-	signal S_rstick_x: std_logic_vector(7 downto 0);
-	signal S_rstick_y: std_logic_vector(7 downto 0);
-	signal S_analog_trigger: std_logic_vector(5 downto 0);
-	signal S_btn_a: std_logic;
-	signal S_btn_b: std_logic;
-	signal S_btn_x: std_logic;
-	signal S_btn_y: std_logic;
-	signal S_btn_left_bumper: std_logic;
-	signal S_btn_right_bumper: std_logic;
-	signal S_btn_left_trigger: std_logic;
-	signal S_btn_right_trigger: std_logic;
-	signal S_btn_back: std_logic;
-	signal S_btn_start: std_logic;
-	signal S_btn_lstick: std_logic;
-	signal S_btn_rstick: std_logic;
-	signal S_btn_fps: std_logic;
-	signal S_btn_fps_toggle: std_logic;
-	signal S_hat_up: std_logic;
-	signal S_hat_down: std_logic;
-	signal S_hat_left: std_logic;
-	signal S_hat_right: std_logic;
-	-- decoded stick to digital
-	signal S_lstick_up, S_lstick_down, S_lstick_left, S_lstick_right: std_logic;
-	signal S_rstick_up, S_rstick_down, S_rstick_left, S_rstick_right: std_logic;
-	signal S_mouseq_x, S_mouseq_y: std_logic_vector(1 downto 0);
+        signal S_report_decoded: T_report_decoded;
 	-- end emard usb hid joystick
 
 begin
@@ -273,67 +250,37 @@ begin
   usbhid_report_decoder_inst: entity usbhid_report_decoder
   generic map
   (
-    C_mousex_scaler => 22, -- less -> faster mouse
-    C_mousey_scaler => 22  -- less -> faster mouse
+    C_rmouse => true, -- right stick to mouse quadrature encoder
+    C_rmousex_scaler => 22, -- less -> faster mouse
+    C_rmousey_scaler => 22  -- less -> faster mouse
   )
   port map
   (
     clk => clk7M5,
     hid_report => S_hid_report,
-    lstick_x => S_lstick_x,
-    lstick_y => S_lstick_y,
-    rstick_x => S_rstick_x,
-    rstick_y => S_rstick_y,
-    analog_trigger => S_analog_trigger,
-    mouseq_x => S_mouseq_x,
-    mouseq_y => S_mouseq_y,
-    lstick_up => S_lstick_up,
-    lstick_down => S_lstick_down,
-    lstick_left => S_lstick_left,
-    lstick_right => S_lstick_right,
-    rstick_up => S_rstick_up,
-    rstick_down => S_rstick_down,
-    rstick_left => S_rstick_left,
-    rstick_right => S_rstick_right,
-    hat_up => S_hat_up,
-    hat_down => S_hat_down,
-    hat_left => S_hat_left,
-    hat_right => S_hat_right,
-    btn_a => S_btn_a,
-    btn_b => S_btn_b,
-    btn_x => S_btn_x,
-    btn_y => S_btn_y,
-    btn_left_bumper => S_btn_left_bumper,
-    btn_right_bumper => S_btn_right_bumper,
-    btn_left_trigger => S_btn_left_trigger,
-    btn_right_trigger => S_btn_right_trigger,
-    btn_back => S_btn_back,
-    btn_start => S_btn_start,
-    btn_lstick => S_btn_lstick,
-    btn_rstick => S_btn_rstick,
-    btn_fps => S_btn_fps, btn_fps_toggle => S_btn_fps_toggle
+    decoded => S_report_decoded
   );
 
   process(clk7m5)
   begin
     if rising_edge(clk7m5) then
       -- Joystick1 port used as mouse (right stick)
-      n_joy1(5) <= not (               S_btn_start);  -- fire2
-      n_joy1(4) <= not (btn(1)      or S_btn_rstick); -- fire
-      n_joy1(3) <= not (S_mouseq_y(0));       -- LSB quadrature y
-      n_joy1(2) <= not (S_mouseq_x(0));       -- LSB quadrature x
-      n_joy1(1) <= not (S_mouseq_y(1));       -- MSB quadrature y
-      n_joy1(0) <= not (S_mouseq_x(1));       -- MSB quadrature x
+      n_joy1(5) <= not (          S_report_decoded.btn_start);  -- fire2
+      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rstick); -- fire
+      n_joy1(3) <= not (S_report_decoded.rmouseq_y(0));       -- LSB quadrature y
+      n_joy1(2) <= not (S_report_decoded.rmouseq_x(0));       -- LSB quadrature x
+      n_joy1(1) <= not (S_report_decoded.rmouseq_y(1));       -- MSB quadrature y
+      n_joy1(0) <= not (S_report_decoded.rmouseq_x(1));       -- MSB quadrature x
 
       -- Joystick2 port used as joystick (left stick, keys abxy, right trigger/bumper)
       -- Joystick2 bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
       -- inverted logic: joystick switches pull down when pressed
-      n_joy2(5) <= not (          S_btn_right_bumper);  -- fire2
-      n_joy2(4) <= not (btn(2) or S_btn_right_trigger or S_btn_back); -- fire
-      n_joy2(3) <= not (btn(3) or S_btn_y or S_lstick_up   );     -- up
-      n_joy2(2) <= not (btn(4) or S_btn_a or S_lstick_down );   -- down
-      n_joy2(1) <= not (btn(5) or S_btn_x or S_lstick_left );   -- left
-      n_joy2(0) <= not (btn(6) or S_btn_b or S_lstick_right);  -- right
+      n_joy2(5) <= not (          S_report_decoded.btn_rbumper);  -- fire2
+      n_joy2(4) <= not (btn(2) or S_report_decoded.btn_rtrigger or S_report_decoded.btn_back); -- fire
+      n_joy2(3) <= not (btn(3) or S_report_decoded.btn_y or S_report_decoded.lstick_up   );     -- up
+      n_joy2(2) <= not (btn(4) or S_report_decoded.btn_a or S_report_decoded.lstick_down );   -- down
+      n_joy2(1) <= not (btn(5) or S_report_decoded.btn_x or S_report_decoded.lstick_left );   -- left
+      n_joy2(0) <= not (btn(6) or S_report_decoded.btn_b or S_report_decoded.lstick_right);  -- right
     end if;
   end process;
   led(6 downto 1) <= not n_joy2;
