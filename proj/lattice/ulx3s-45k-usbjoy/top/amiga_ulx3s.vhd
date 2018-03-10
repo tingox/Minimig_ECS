@@ -251,8 +251,8 @@ begin
   generic map
   (
     C_rmouse => true, -- right stick to mouse quadrature encoder
-    C_rmousex_scaler => 22, -- less -> faster mouse
-    C_rmousey_scaler => 22  -- less -> faster mouse
+    C_rmousex_scaler => 23, -- less -> faster mouse
+    C_rmousey_scaler => 23  -- less -> faster mouse
   )
   port map
   (
