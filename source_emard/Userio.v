@@ -201,24 +201,23 @@ always @(posedge clk)
 //	autofire is permanent active if enabled, can be overwritten any time by normal fire button
 assign _sjoy2[5:0] = joy2enable ? {_xjoy2[5], sel_autofire ^ _xjoy2[4], _xjoy2[3:0]} : 6'b11_1111;
 
-reg [20:0] joy_pressed_counter;
+reg [12:0] joy_autorepeat;
 always @(posedge clk)
 begin
-  if( &_xjoy2 == 1) // joystick idle (nothing pressed)
-    joy_pressed_counter <= 0;
+  if( &_xjoy2 == 1) // all buttons released
+    joy_autorepeat <= 0;
   else
-    if( &joy_pressed_counter == 0) // not yet all bits set, can increment
-      joy_pressed_counter <= joy_pressed_counter+1;
-end;
-// joystick short click gate
-assign joy_click = |joy_pressed_counter[20:10] == 0 ? 1 : 0;
-// joystick long pressed gate
-assign joy_long = &joy_pressed_counter == 1 ? 1 : 0;
-// joystick gate: click or long hold
-assign joy_gate = joy_click || joy_long;
+    if( &joy_autorepeat != 1) // not yet all bits set, can increment
+      joy_autorepeat <= joy_autorepeat+1;
+end
+
+// joystick single click gate
+assign joy_click = joy_autorepeat == 1 ? 1 : 0;
+// joystick hold gate
+assign joy_hold = &joy_autorepeat == 1 ? 1 : 0;
 
 always @(joy2enable or _xjoy2 or osd_ctrl)
-	if (~joy2enable && joy_gate)
+	if (~joy2enable && (joy_click || joy_hold))
 		if ( &(~_xjoy2[3:0]) ) // MENU: press all 4 buttons
 			t_osd_ctrl = KEY_MENU;
 		else if (~_xjoy2[4])
@@ -234,7 +233,7 @@ always @(joy2enable or _xjoy2 or osd_ctrl)
 		else
 			t_osd_ctrl = osd_ctrl;
 	else
-		if ( &(~_xjoy2[3:0]) && joy_gate ) // MENU: press all 4 buttons
+		if ( &(~_xjoy2[3:0]) )
 			t_osd_ctrl = KEY_MENU;
 		else
 			t_osd_ctrl = osd_ctrl;
