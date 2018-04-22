@@ -39,7 +39,7 @@ use ieee.std_logic_unsigned.all;
 entity """ + modulename + """ is
 	generic 
 	(
-		pass_thru_a: boolean := False;
+		pass_thru_a: boolean := True;
 		data_width: natural := """ + str(8*datasize) + """;
 		addr_width: natural := """ + str(adrsize) + """
 	);
