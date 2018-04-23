@@ -218,13 +218,13 @@ begin
   clk_pll: entity work.clk_28_280_112_112s_7
   port map
   (
-    refclk     => sys_clock, -- 50 MHz
+    refclk     => sys_clock, --  50       MHz
     rst        => '0',
-    outclk_0   => clk28m,
-    outclk_1   => clk_dvi,
-    outclk_2   => clk_sdram,
-    outclk_3   => open,
-    outclk_4   => clk7m,
+    outclk_0   => clk28m,    --  28.125   MHz
+    outclk_1   => clk_dvi,   -- 281.25    MHz
+    outclk_2   => clk_sdram, -- 112.5     MHz
+    outclk_3   => open,      -- 112.5     MHz 144 deg phase
+    outclk_4   => clk7m,     --   7.03125 MHz
     LOCKED     => pll_locked
   );
   clk <= clk_sdram;
