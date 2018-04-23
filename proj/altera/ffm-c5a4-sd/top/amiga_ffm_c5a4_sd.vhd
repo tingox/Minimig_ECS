@@ -489,6 +489,18 @@ begin
 
 end generate; -- if not C_flea_av
 
+    -- adv7513 routing
+    dv_clk <= clk_pixel;
+    dv_de <= not videoblank;
+    dv_hsync <= hsync;
+    dv_vsync <= vsync;
+    dv_d(23 downto 20) <= red_u;
+    dv_d(19 downto 16) <= (others => red_u(0));
+    dv_d(15 downto 12) <= green_u;
+    dv_d(11 downto 8) <= (others => green_u(0));
+    dv_d(7 downto 4) <= blue_u;
+    dv_d(3 downto 0) <= (others => blue_u(0));
+
     i2c_send: entity work.i2c_sender
       port map
       (
