@@ -247,12 +247,12 @@ begin
   myFampiga: entity work.Fampiga
   port map
   (
-    clk=> clk,
-    clk7m=> clk7m,
-    clk28m=> clk28m,
-    reset_n=>reset_n,
+    clk => clk,
+    clk7m => clk7m,
+    clk28m => clk28m,
+    reset_n => reset_n,
     --powerled_out=>power_leds(5 downto 4),
-    diskled_out=>diskoff,
+    diskled_out => diskoff,
     --oddled_out=>odd_leds(5), 
 
     -- SDRAM.  A separate shifted clock is provided by the toplevel
@@ -310,7 +310,7 @@ begin
     sd_clk => mmc_clk
   );
 
-  dr_clk <= clk_sdram;
+  dr_clk <= not clk_sdram;
   dr_d(31 downto 16) <= (others => 'Z');
   dr_dqm(3 downto 2) <= (others => '1');
 
