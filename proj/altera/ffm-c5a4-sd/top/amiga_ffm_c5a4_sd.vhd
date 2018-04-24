@@ -242,7 +242,7 @@ begin
   );
   reset <= not reset_n;
 		
-  led <= not diskoff;
+  led <= diskoff;
 
   myFampiga: entity work.Fampiga
   port map
