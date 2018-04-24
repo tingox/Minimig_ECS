@@ -309,12 +309,6 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../Minimig_ECS/impl1/source/BootRom.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-        </FileInfo>
-      </File>
       <File Path="$PPRDIR/../../../Minimig_ECS/impl1/source/akiko.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
@@ -431,9 +425,7 @@
     </Run>
     <Run Id="clk_d100_7_28_140_280_105MHz_synth_1" Type="Ft3:Synth" SrcSet="clk_d100_7_28_140_280_105MHz" Part="xc7a100tfgg484-2" ConstrsSet="clk_d100_7_28_140_280_105MHz" Description="Vivado Synthesis Defaults" WriteIncrSynthDcp="false" Dir="$PRUNDIR/clk_d100_7_28_140_280_105MHz_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2018">
-          <Desc>Vivado Synthesis Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2018"/>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
@@ -475,9 +467,7 @@
     </Run>
     <Run Id="clk_d100_7_28_140_280_105MHz_impl_1" Type="Ft2:EntireDesign" Part="xc7a100tfgg484-2" ConstrsSet="clk_d100_7_28_140_280_105MHz" Description="Default settings for Implementation." WriteIncrSynthDcp="false" SynthRun="clk_d100_7_28_140_280_105MHz_synth_1" IncludeInArchive="false">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2018">
-          <Desc>Default settings for Implementation.</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2018"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
