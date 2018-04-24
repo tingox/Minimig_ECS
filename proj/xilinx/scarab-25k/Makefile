@@ -23,7 +23,6 @@ vfiles = \
 ../../../Minimig_ECS/impl1/source/Beamcounter.v \
 ../../../Minimig_ECS/impl1/source/Bitplanes.v \
 ../../../Minimig_ECS/impl1/source/Blitter.v \
-../../../Minimig_ECS/impl1/source/BootRom.v \
 ../../../Minimig_ECS/impl1/source/CIA8520.v \
 ../../../Minimig_ECS/impl1/source/Clock.v \
 ../../../Minimig_ECS/impl1/source/Copper.v \
