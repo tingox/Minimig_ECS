@@ -153,14 +153,14 @@ set_property -dict {PACKAGE_PIN V10 IOSTANDARD LVTTL} [get_ports {sd_m_d[3]}]
 #	Low cost digital video (on tms141)
 #
 # single-ended
-set_property -dict {PACKAGE_PIN AB2 IOSTANDARD LVTTL} [get_ports vid_clk_n]
-set_property -dict {PACKAGE_PIN AB3 IOSTANDARD LVTTL} [get_ports vid_clk_p]
-set_property -dict {PACKAGE_PIN AB5 IOSTANDARD LVTTL} [get_ports {vid_d_n[0]}]
-set_property -dict {PACKAGE_PIN AA5 IOSTANDARD LVTTL} [get_ports {vid_d_p[0]}]
-set_property -dict {PACKAGE_PIN AB6 IOSTANDARD LVTTL} [get_ports {vid_d_n[1]}]
-set_property -dict {PACKAGE_PIN AB7 IOSTANDARD LVTTL} [get_ports {vid_d_p[1]}]
-set_property -dict {PACKAGE_PIN AB8 IOSTANDARD LVTTL} [get_ports {vid_d_n[2]}]
-set_property -dict {PACKAGE_PIN AA8 IOSTANDARD LVTTL} [get_ports {vid_d_p[2]}]
+set_property -dict {PACKAGE_PIN AB2 IOSTANDARD LVTTL DRIVE 2} [get_ports vid_clk_n]
+set_property -dict {PACKAGE_PIN AB3 IOSTANDARD LVTTL DRIVE 2} [get_ports vid_clk_p]
+set_property -dict {PACKAGE_PIN AB5 IOSTANDARD LVTTL DRIVE 2} [get_ports {vid_d_n[0]}]
+set_property -dict {PACKAGE_PIN AA5 IOSTANDARD LVTTL DRIVE 2} [get_ports {vid_d_p[0]}]
+set_property -dict {PACKAGE_PIN AB6 IOSTANDARD LVTTL DRIVE 2} [get_ports {vid_d_n[1]}]
+set_property -dict {PACKAGE_PIN AB7 IOSTANDARD LVTTL DRIVE 2} [get_ports {vid_d_p[1]}]
+set_property -dict {PACKAGE_PIN AB8 IOSTANDARD LVTTL DRIVE 2} [get_ports {vid_d_n[2]}]
+set_property -dict {PACKAGE_PIN AA8 IOSTANDARD LVTTL DRIVE 2} [get_ports {vid_d_p[2]}]
 # differential
 #set_property -dict {PACKAGE_PIN AB2 IOSTANDARD TMDS_33} [get_ports vid_clk_n]
 #set_property -dict {PACKAGE_PIN AB3 IOSTANDARD TMDS_33} [get_ports vid_clk_p]
@@ -171,10 +171,10 @@ set_property -dict {PACKAGE_PIN AA8 IOSTANDARD LVTTL} [get_ports {vid_d_p[2]}]
 #set_property -dict {PACKAGE_PIN AB8 IOSTANDARD TMDS_33} [get_ports {vid_d_n[2]}]
 #set_property -dict {PACKAGE_PIN AA8 IOSTANDARD TMDS_33} [get_ports {vid_d_p[2]}]
 # i2c
-#set_property -dict {PACKAGE_PIN U5 IOSTANDARD LVTTL} [get_ports vid_rscl]
-#set_property -dict {PACKAGE_PIN U3 IOSTANDARD LVTTL} [get_ports vid_rsda]
+#set_property -dict {PACKAGE_PIN U5 IOSTANDARD LVTTL DRIVE 2} [get_ports vid_rscl]
+#set_property -dict {PACKAGE_PIN U3 IOSTANDARD LVTTL DRIVE 2} [get_ports vid_rsda]
 # signaling
-#set_property -dict {PACKAGE_PIN T3 IOSTANDARD LVTTL} [get_ports vid_src]
+#set_property -dict {PACKAGE_PIN T3 IOSTANDARD LVTTL DRIVE 2} [get_ports vid_src]
 
 #
 #	SDRAM 32 bit wide (IS42s32160F-6bli)
