@@ -30,9 +30,6 @@
         <Source name="../../../Minimig_ECS/impl1/source/Blitter.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="../../../Minimig_ECS/impl1/source/BootRom.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
         <Source name="../../../source_emard/cfide.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
