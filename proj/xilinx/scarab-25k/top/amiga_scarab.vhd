@@ -287,12 +287,12 @@ begin
 		n_joy2 => n_joy2,		
 		
 		-- RS232
-		rs232_rxd => rs232_rx,
-		rs232_txd => rs232_tx,
+		rs232_rxd => '1',
+		rs232_txd => open,
 		
 		-- ESP8266 wifi modem
-		amiga_rs232_rxd => portf(0),
-		amiga_rs232_txd => portf(1),
+		amiga_rs232_rxd => '1',
+		amiga_rs232_txd => open,
 		
 		-- SD card interface
 		sd_cs => mmc_n_cs,
