@@ -180,7 +180,7 @@
         <Source name="../../../rtl_emard/spdif/spdif_tx.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
-        <Source name="ulx3s_flash.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="fleafpga_ohm_flash.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
         <Source name="constraints/FleaFPGA_Ohm_A5.lpf" type="Logic Preference" type_short="LPF">
