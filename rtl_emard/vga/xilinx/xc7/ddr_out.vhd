@@ -7,7 +7,7 @@ use IEEE.std_logic_1164.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity ddr_out is
+entity ddr_out_emard is
   port
   (
     iclkp: in std_logic; -- only this is used
@@ -16,9 +16,9 @@ entity ddr_out is
     idata: in std_logic_vector(1 downto 0);
     odata: out std_logic
   );
-end ddr_out;
+end ddr_out_emard;
 
-architecture Structure of ddr_out is
+architecture Structure of ddr_out_emard is
 begin
   ODDR_inst: ODDR
   generic map
