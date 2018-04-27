@@ -193,6 +193,20 @@ architecture struct of amiga_ffm_a7100 is
       locked: out STD_LOGIC
   );
   end component clk_d100_7_28_140_280_105MHz;
+  component clk_d100_112_7_28_140_280MHz is
+  port
+  (
+      clk_in1_p   : in STD_LOGIC;
+      clk_in1_n   : in STD_LOGIC;
+      clk_112m5   : out STD_LOGIC;
+      clk_7m03125 : out STD_LOGIC;
+      clk_28m125  : out STD_LOGIC;
+      clk_140m625 : out STD_LOGIC;
+      clk_281m25  : out STD_LOGIC;
+      reset: in STD_LOGIC;
+      locked: out STD_LOGIC
+  );
+  end component clk_d100_112_7_28_140_280MHz;
 begin
   -- btn(0) used as reset has inverted logic
   sys_reset <= '1'; -- '1' is not reset, '0' is reset
@@ -232,7 +246,7 @@ begin
   ps2m_clk_in<=PS2_clk2;
   PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
   
-  G_clk_pll_0: if true generate
+  G_clk_pll_0: if false generate
   clk_pll_0: clk_d100_7_28_140_280_105MHz
   port map
   (
@@ -259,6 +273,22 @@ begin
     clk_140m625 => open,
     clk_281m25  => clk_dvi,
     clk_120m536 => clk_sdram,
+    reset       => pll_reset,
+    locked      => pll_locked
+  );
+  end generate;
+
+  G_clk_pll_2: if true generate
+  clk_pll_2: clk_d100_112_7_28_140_280MHz
+  port map
+  (
+    clk_in1_p   => clk_100mhz_p, -- 100 MHz +
+    clk_in1_n   => clk_100mhz_n, -- 100 MHz -
+    clk_7m03125 => clk7m,
+    clk_28m125  => clk28m,
+    clk_140m625 => open,
+    clk_281m25  => clk_dvi,
+    clk_112m5   => clk_sdram,
     reset       => pll_reset,
     locked      => pll_locked
   );
