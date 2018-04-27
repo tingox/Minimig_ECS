@@ -115,7 +115,6 @@ architecture struct of amiga_ffm_a7100 is
   signal dvi_hsync   : std_logic := '0';
   signal dvi_vsync   : std_logic := '0';
   
-  signal clk_sdram, clkn_sdram: std_logic;
   signal clk_dvi  : std_logic := '0';
   signal clk_dvin : std_logic := '0'; 
  
@@ -148,7 +147,7 @@ architecture struct of amiga_ffm_a7100 is
   signal   right_sampled:	std_logic_vector(15 downto 0);
 	 
   constant pll_reset: std_logic := '0';
-  signal pll_locked: std_logic;
+  signal pll_locked, pll_locked1: std_logic;
   signal reset: std_logic;
   signal reset_n: std_logic;
   signal reset_combo1: std_logic;
@@ -165,34 +164,15 @@ architecture struct of amiga_ffm_a7100 is
   -- end emard AV
   signal sw: std_logic_vector(3 downto 0) := (others => '1');
 
-  component clk_d100_7_28_140_280_120MHz is
+  component clk_d100_112sMHz is
   port
   (
-      clk_in1_p   : in STD_LOGIC;
-      clk_in1_n   : in STD_LOGIC;
-      clk_7m03125 : out STD_LOGIC;
-      clk_28m125  : out STD_LOGIC;
-      clk_140m625 : out STD_LOGIC;
-      clk_281m25  : out STD_LOGIC;
-      clk_120m536 : out STD_LOGIC;
+      clk_in1     : in STD_LOGIC;
+      clk_112m5s  : out STD_LOGIC;
       reset: in STD_LOGIC;
       locked: out STD_LOGIC
   );
-  end component clk_d100_7_28_140_280_120MHz;
-  component clk_d100_7_28_140_280_105MHz is
-  port
-  (
-      clk_in1_p   : in STD_LOGIC;
-      clk_in1_n   : in STD_LOGIC;
-      clk_7m03125 : out STD_LOGIC;
-      clk_28m125  : out STD_LOGIC;
-      clk_140m625 : out STD_LOGIC;
-      clk_281m25  : out STD_LOGIC;
-      clk_105m469 : out STD_LOGIC;
-      reset: in STD_LOGIC;
-      locked: out STD_LOGIC
-  );
-  end component clk_d100_7_28_140_280_105MHz;
+  end component clk_d100_112sMHz;
   component clk_d100_112_7_28_140_280MHz is
   port
   (
@@ -246,8 +226,7 @@ begin
   ps2m_clk_in<=PS2_clk2;
   PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
   
-  G_clk_pll_0: if false generate
-  clk_pll_0: clk_d100_7_28_140_280_105MHz
+  clk_pll_0: clk_d100_112_7_28_140_280MHz
   port map
   (
     clk_in1_p   => clk_100mhz_p, -- 100 MHz +
@@ -256,47 +235,21 @@ begin
     clk_28m125  => clk28m,
     clk_140m625 => open,
     clk_281m25  => clk_dvi,
-    clk_105m469 => clk_sdram,
+    clk_112m5   => clk,
     reset       => pll_reset,
     locked      => pll_locked
   );
-  end generate;
 
-  G_clk_pll_1: if false generate
-  clk_pll_1: clk_d100_7_28_140_280_120MHz
+  clk_pll_1: clk_d100_112sMHz
   port map
   (
-    clk_in1_p   => clk_100mhz_p, -- 100 MHz +
-    clk_in1_n   => clk_100mhz_n, -- 100 MHz -
-    clk_7m03125 => clk7m,
-    clk_28m125  => clk28m,
-    clk_140m625 => open,
-    clk_281m25  => clk_dvi,
-    clk_120m536 => clk_sdram,
+    clk_in1     => clk,          -- 112.5 MHz
+    clk_112m5s  => dr_clk,       -- 112.5 MHz phase shifted 144 deg
     reset       => pll_reset,
-    locked      => pll_locked
+    locked      => pll_locked1
   );
-  end generate;
 
-  G_clk_pll_2: if true generate
-  clk_pll_2: clk_d100_112_7_28_140_280MHz
-  port map
-  (
-    clk_in1_p   => clk_100mhz_p, -- 100 MHz +
-    clk_in1_n   => clk_100mhz_n, -- 100 MHz -
-    clk_7m03125 => clk7m,
-    clk_28m125  => clk28m,
-    clk_140m625 => open,
-    clk_281m25  => clk_dvi,
-    clk_112m5   => clk_sdram,
-    reset       => pll_reset,
-    locked      => pll_locked
-  );
-  end generate;
-
-  clk <= clk_sdram;
-
-  reset_combo1 <= sys_reset and pll_locked;
+  reset_combo1 <= sys_reset and pll_locked and pll_locked1;
 		
   u10 : entity work.poweronreset
   port map
@@ -377,7 +330,6 @@ begin
     sd_clk => mmc_clk
   );
 
-  dr_clk <= not clk_sdram;
   dr_d(31 downto 16) <= (others => 'Z');
   dr_dqm(3 downto 2) <= (others => '1');
 
@@ -506,6 +458,7 @@ begin
   -- audio_v(1 downto 0) <= (others => S_spdif_out);
   end generate;
 
+  g_vga2dvi: if true generate
   vga2dvi_converter: entity work.vga2dvid
   generic map
   (
@@ -515,7 +468,7 @@ begin
   port map
   (
       clk_pixel => clk_pixel, -- 28 MHz
-      clk_shift => clk_pixel_shift, -- 5*28 MHz
+      clk_shift => clk_pixel_shift, -- 5*28 MHz for DDR or 10*28 MHz for SDR
 
       in_red   => red_u,
       in_green => green_u,
@@ -533,7 +486,6 @@ begin
   );
 
     -- single ended outputs simulating differential buffering for DVI clock and video
-    G_sdr_dvi_out: if true generate
     dvi_output: entity work.hdmi_out
       port map
       (
@@ -544,20 +496,9 @@ begin
         tmds_out_clk_p => vid_clk_p, -- CLK+ clock
         tmds_out_clk_n => vid_clk_n  -- CLK- clock
       );
-    end generate;
+  end generate; -- low-cost video
 
---    dvi_out_buf: entity work.hdmi_out
---      port map
---      (
---        tmds_in_rgb    => ddr_dvid(3 downto 1),
---        tmds_out_rgb_p => vid_d_p,   -- D2+ red  D1+ green  D0+ blue
---        tmds_out_rgb_n => vid_d_n,   -- D2- red  D1- green  D0- blue
---        tmds_in_clk    => ddr_dvid(0),
---        tmds_out_clk_p => vid_clk_p, -- CLK+ clock
---        tmds_out_clk_n => vid_clk_n  -- CLK- clock
---      );
-
-end generate; -- if not C_flea_av
+  end generate; -- if not C_flea_av
 
     -- adv7513 routing
     dv_clk <= clk_pixel;
