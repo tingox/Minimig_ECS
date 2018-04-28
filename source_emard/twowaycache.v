@@ -154,7 +154,7 @@ Cache_BlockRAM tagram(
 bram_true2p_1clk
 #(
   .data_width(18),
-  .addr_width(11)
+  .addr_width(9)
 )
 tagram
 (
