@@ -87,7 +87,7 @@ architecture struct of amiga_ffm_a7100 is
   -- END ALIASING
 
   signal clk_100MHz: std_logic; -- converted from differential to single ended
-  signal clk_fb: std_logic; -- feedback internally used in clock generator
+  signal clk_fb_main, clk_fb_sdram: std_logic; -- feedback internally used in clock generator
   signal clk: std_logic := '0';	
   signal clk7m: std_logic := '0';
   signal clk28m: std_logic := '0';   
@@ -117,7 +117,6 @@ architecture struct of amiga_ffm_a7100 is
   signal dvi_hsync   : std_logic := '0';
   signal dvi_vsync   : std_logic := '0';
   
-  signal clk_sdram, clkn_sdram: std_logic;
   signal clk_dvi  : std_logic := '0';
   signal clk_dvin : std_logic := '0'; 
  
@@ -145,7 +144,7 @@ architecture struct of amiga_ffm_a7100 is
   signal   right_sampled:	std_logic_vector(15 downto 0);
 	 
   constant pll_reset: std_logic := '0';
-  signal pll_locked: std_logic;
+  signal pll_locked_main, pll_locked_sdram: std_logic;
   signal reset: std_logic;
   signal reset_n: std_logic;
   signal reset_combo1: std_logic;
@@ -205,14 +204,14 @@ begin
   clk_main: mmcme2_base
   generic map
   (
-    clkin1_period    => 10.0,           --   100      MHz
-    clkfbout_mult_f  => 16.875,		--  1687.5    MHz *16.875 common multiply
-    divclk_divide    => 2,              --   843.75   MHz /2 common divide
-    clkout0_divide_f => 7.5,		--  112.5     MHz /7.5 divide
-    clkout1_divide   => 120,		--    7.03125 MHz /120 divide
-    clkout2_divide   => 30,		--   28.125   MHz /30 divide
-    clkout3_divide   => 6,		--  140.625   MHz /6 divide
-    clkout4_divide   => 3, 		--  281.25    MHz /3 divide
+    clkin1_period    => 10.0,       --   100      MHz (10 ns)
+    clkfbout_mult_f  => 16.875,     --  1687.5    MHz *16.875 common multiply
+    divclk_divide    => 2,          --   843.75   MHz /2 common divide
+    clkout0_divide_f => 7.5,        --  112.5     MHz /7.5 divide
+    clkout1_divide   => 120,        --    7.03125 MHz /120 divide
+    clkout2_divide   => 30,         --   28.125   MHz /30 divide
+    clkout3_divide   => 6,          --  140.625   MHz /6 divide
+    clkout4_divide   => 3,          --  281.25    MHz /3 divide
     bandwidth        => "LOW"
   )
   port map
@@ -220,17 +219,38 @@ begin
     pwrdwn   => '0',
     rst      => '0',
     clkin1   => clk_100MHz,
-    clkfbin  => clk_fb,
-    clkfbout => clk_fb,
-    clkout0  => clk,                  --  112.5     MHz
-    clkout1  => clk7m,                --    7.03125 MHz
-    clkout2  => clk28m,               --   28.125   MHz
-    clkout3  => clk_dvi,              --  140.625   MHz
-    clkout4  => open,                 --  281.25    MHz
-    locked   => pll_locked
+    clkfbin  => clk_fb_main,
+    clkfbout => clk_fb_main,
+    clkout0  => clk,                --  112.5     MHz
+    clkout1  => clk7m,              --    7.03125 MHz
+    clkout2  => clk28m,             --   28.125   MHz
+    clkout3  => clk_dvi,            --  140.625   MHz
+    clkout4  => open,               --  281.25    MHz
+    locked   => pll_locked_main
   );
 
-  reset_combo1 <= sys_reset and pll_locked;
+  clk_sdram: mmcme2_base
+  generic map
+  (
+    clkin1_period    => 8.88888888, --   112.5    MHz (8.88888 ns)
+    clkfbout_mult_f  => 10.0,       --  1125.0    MHz *10 common multiply
+    divclk_divide    => 1,          --  1125.0    MHz /1  common divide
+    clkout0_divide_f => 10.0,       --  112.5     MHz /10 divide
+    clkout0_phase    => 153.0,      --            deg phase shift (multiple of 45/clkout0_divide_f = 4.5)
+    bandwidth        => "LOW"
+  )
+  port map
+  (
+    pwrdwn   => '0',
+    rst      => '0',
+    clkin1   => clk,
+    clkfbin  => clk_fb_sdram,
+    clkfbout => clk_fb_sdram,
+    clkout0  => dr_clk,             --  112.5     MHz phase shifted
+    locked   => pll_locked_sdram
+  );
+
+  reset_combo1 <= sys_reset and pll_locked_main and pll_locked_sdram;
 		
   u10 : entity work.poweronreset
   port map
@@ -311,7 +331,7 @@ begin
     sd_clk => mmc_clk
   );
 
-  dr_clk <= not clk;
+  -- dr_clk <= not clk;
   dr_d(31 downto 16) <= (others => 'Z');
   dr_dqm(3 downto 2) <= (others => '1');
 
