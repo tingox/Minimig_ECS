@@ -218,76 +218,76 @@ set_location_assignment PIN_AB5 -to DR_WE_N
 #
 #	FIOs (unassigned part)
 #
-set_location_assignment PIN_N20 -to FIO[0]
-set_location_assignment PIN_N19 -to FIO[1]
-set_location_assignment PIN_M20 -to FIO[2]
-set_location_assignment PIN_M18 -to FIO[3]
-set_location_assignment PIN_L17 -to FIO[4]
-set_location_assignment PIN_L18 -to FIO[5]
-set_location_assignment PIN_L19 -to FIO[6]
-set_location_assignment PIN_K17 -to FIO[7]
-set_location_assignment PIN_R22 -to FIO[8]
-set_location_assignment PIN_N21 -to FIO[9]
-set_location_assignment PIN_M22 -to FIO[10]
-set_location_assignment PIN_M21 -to FIO[11]
-set_location_assignment PIN_L22 -to FIO[12]
-set_location_assignment PIN_K22 -to FIO[13]
-set_location_assignment PIN_K21 -to FIO[14]
-set_location_assignment PIN_J17 -to FIO[15]
-set_location_assignment PIN_K16 -to FIO[16]
-set_location_assignment PIN_H16 -to FIO[17]
-set_location_assignment PIN_H15 -to FIO[18]
-set_location_assignment PIN_G13 -to FIO[19]
-set_location_assignment PIN_D13 -to FIO[20]
-set_location_assignment PIN_D9 -to FIO[21]
-set_location_assignment PIN_C9 -to FIO[22]
-set_location_assignment PIN_F9 -to FIO[23]
-#set_location_assignment PIN_C8 -to FIO[24]
-#set_location_assignment PIN_D7 -to FIO[25]
-#set_location_assignment PIN_E7 -to FIO[26]
-#set_location_assignment PIN_C6 -to FIO[27]
-#set_location_assignment PIN_D6 -to FIO[28]
-#set_location_assignment PIN_B5 -to FIO[29]
-#set_location_assignment PIN_G6 -to FIO[30]
-#set_location_assignment PIN_M8 -to FIO[31]
-#set_location_assignment PIN_M7 -to FIO[32]
-#set_location_assignment PIN_M6 -to FIO[33]
-#set_location_assignment PIN_N9 -to FIO[34]
-#set_location_assignment PIN_N8 -to FIO[35]
-#set_location_assignment PIN_P8 -to FIO[36]
-#set_location_assignment PIN_P7 -to FIO[37]
-#set_location_assignment PIN_N6 -to FIO[38]
-#set_location_assignment PIN_P6 -to FIO[39]
-#set_location_assignment PIN_G10 -to FIO[40]
-#set_location_assignment PIN_F10 -to FIO[41]
-#set_location_assignment PIN_J9 -to FIO[42]
-#set_location_assignment PIN_H9 -to FIO[43]
-#set_location_assignment PIN_G8 -to FIO[44]
-#set_location_assignment PIN_F7 -to FIO[45]
-#set_location_assignment PIN_H8 -to FIO[46]
-#set_location_assignment PIN_B16 -to FIO[47] # (B7A_2P)
-#set_location_assignment PIN_C16 -to FIO[48] # (B7A_2N)
-#set_location_assignment PIN_C15 -to FIO[49] # (B7A_11P)
-#set_location_assignment PIN_B15 -to FIO[50] # (B7A_11N)
-#set_location_assignment PIN_A15 -to FIO[51] # (B7A_8P)
-#set_location_assignment PIN_A14 -to FIO[52] # (B7A_8N)
-#set_location_assignment PIN_B13 -to FIO[53] # (B8A_14P)
-#set_location_assignment PIN_A13 -to FIO[54] # (B7A_14N)
-#set_location_assignment PIN_B12 -to FIO[55] # (B7A_20P)
-#set_location_assignment PIN_A12 -to FIO[56] # (B7A_20N)
-#set_location_assignment PIN_C11 -to FIO[57] # (B7A_24P)
-#set_location_assignment PIN_B11 -to FIO[58] # (B7A_24N)
-#set_location_assignment PIN_K20 -to FIO[59] # (B7A_1P)
-#set_location_assignment PIN_K19 -to FIO[60] # (B7A_1N)
-#set_location_assignment PIN_J19 -to FIO[61] # (B7A_6P)
-#set_location_assignment PIN_J18 -to FIO[62] # (B7A_6N)
-#set_location_assignment PIN_G18 -to FIO[63] # (B7A_5P)
-#set_location_assignment PIN_H18 -to FIO[64] # (B7A_5N)
-#set_location_assignment PIN_G17 -to FIO[65] # (B7A_4P)
-#set_location_assignment PIN_G16 -to FIO[66] # (B7A_4N)
-#set_location_assignment PIN_G15 -to FIO[67] # (B7A_12P)
-#set_location_assignment PIN_F14 -to FIO[68] # (B7A_12N)
-#set_location_assignment PIN_E15 -to FIO[69] # (B7A_7P)
+set_location_assignment PIN_N20 -to fio[0]
+set_location_assignment PIN_N19 -to fio[1]
+set_location_assignment PIN_M20 -to fio[2]
+set_location_assignment PIN_M18 -to fio[3]
+set_location_assignment PIN_L17 -to fio[4]
+set_location_assignment PIN_L18 -to fio[5]
+set_location_assignment PIN_L19 -to fio[6]
+set_location_assignment PIN_K17 -to fio[7]
+set_location_assignment PIN_R22 -to fio[8]
+set_location_assignment PIN_N21 -to fio[9]
+set_location_assignment PIN_M22 -to fio[10]
+set_location_assignment PIN_M21 -to fio[11]
+set_location_assignment PIN_L22 -to fio[12]
+set_location_assignment PIN_K22 -to fio[13]
+set_location_assignment PIN_K21 -to fio[14]
+set_location_assignment PIN_J17 -to fio[15]
+set_location_assignment PIN_K16 -to fio[16]
+set_location_assignment PIN_H16 -to fio[17]
+set_location_assignment PIN_H15 -to fio[18]
+set_location_assignment PIN_G13 -to fio[19]
+set_location_assignment PIN_D13 -to fio[20]
+set_location_assignment PIN_D9 -to fio[21]
+set_location_assignment PIN_C9 -to fio[22]
+set_location_assignment PIN_F9 -to fio[23]
+#set_location_assignment PIN_C8 -to fio[24]
+#set_location_assignment PIN_D7 -to fio[25]
+#set_location_assignment PIN_E7 -to fio[26]
+#set_location_assignment PIN_C6 -to fio[27]
+#set_location_assignment PIN_D6 -to fio[28]
+#set_location_assignment PIN_B5 -to fio[29]
+#set_location_assignment PIN_G6 -to fio[30]
+#set_location_assignment PIN_M8 -to fio[31]
+#set_location_assignment PIN_M7 -to fio[32]
+#set_location_assignment PIN_M6 -to fio[33]
+#set_location_assignment PIN_N9 -to fio[34]
+#set_location_assignment PIN_N8 -to fio[35]
+#set_location_assignment PIN_P8 -to fio[36]
+#set_location_assignment PIN_P7 -to fio[37]
+#set_location_assignment PIN_N6 -to fio[38]
+#set_location_assignment PIN_P6 -to fio[39]
+#set_location_assignment PIN_G10 -to fio[40]
+#set_location_assignment PIN_F10 -to fio[41]
+#set_location_assignment PIN_J9 -to fio[42]
+#set_location_assignment PIN_H9 -to fio[43]
+#set_location_assignment PIN_G8 -to fio[44]
+#set_location_assignment PIN_F7 -to fio[45]
+#set_location_assignment PIN_H8 -to fio[46]
+#set_location_assignment PIN_B16 -to fio[47] # (B7A_2P)
+#set_location_assignment PIN_C16 -to fio[48] # (B7A_2N)
+#set_location_assignment PIN_C15 -to fio[49] # (B7A_11P)
+#set_location_assignment PIN_B15 -to fio[50] # (B7A_11N)
+#set_location_assignment PIN_A15 -to fio[51] # (B7A_8P)
+#set_location_assignment PIN_A14 -to fio[52] # (B7A_8N)
+#set_location_assignment PIN_B13 -to fio[53] # (B8A_14P)
+#set_location_assignment PIN_A13 -to fio[54] # (B7A_14N)
+#set_location_assignment PIN_B12 -to fio[55] # (B7A_20P)
+#set_location_assignment PIN_A12 -to fio[56] # (B7A_20N)
+#set_location_assignment PIN_C11 -to fio[57] # (B7A_24P)
+#set_location_assignment PIN_B11 -to fio[58] # (B7A_24N)
+#set_location_assignment PIN_K20 -to fio[59] # (B7A_1P)
+#set_location_assignment PIN_K19 -to fio[60] # (B7A_1N)
+#set_location_assignment PIN_J19 -to fio[61] # (B7A_6P)
+#set_location_assignment PIN_J18 -to fio[62] # (B7A_6N)
+#set_location_assignment PIN_G18 -to fio[63] # (B7A_5P)
+#set_location_assignment PIN_H18 -to fio[64] # (B7A_5N)
+#set_location_assignment PIN_G17 -to fio[65] # (B7A_4P)
+#set_location_assignment PIN_G16 -to fio[66] # (B7A_4N)
+#set_location_assignment PIN_G15 -to fio[67] # (B7A_12P)
+#set_location_assignment PIN_F14 -to fio[68] # (B7A_12N)
+#set_location_assignment PIN_E15 -to fio[69] # (B7A_7P)
 #
 #	JTAG etc, not used in designs?
 #

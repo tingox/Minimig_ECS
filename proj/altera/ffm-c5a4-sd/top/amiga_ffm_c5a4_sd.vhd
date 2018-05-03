@@ -62,16 +62,19 @@ port
 end;
 
 architecture struct of amiga_ffm_c5a4_sd is
-	-- keyboard
-	alias ps2_clk1 : std_logic is fio(0);
-	alias ps2_data1 : std_logic is fio(1);
-	signal PS_enable: std_logic; -- dummy on ulx3s v1.7.x
-        -- mouse
-	alias ps2_clk2 : std_logic is fio(2);
-	alias ps2_data2 : std_logic is fio(3);
-
 	alias sys_clock: std_logic is clock_50a;
-	
+
+  -- keyboard
+  alias ps2_clk1 : std_logic is fio(6);
+  alias ps2_data1 : std_logic is fio(4);
+  signal PS_enable: std_logic;
+  -- mouse
+  alias ps2_clk2 : std_logic is fio(3);
+  alias ps2_data2 : std_logic is fio(1);
+
+  alias DAC_L: std_logic is fio(2);
+  alias DAC_R: std_logic is fio(0);
+
 	signal LVDS_Red: std_logic_vector(0 downto 0);
 	signal LVDS_Green: std_logic_vector(0 downto 0);
 	signal LVDS_Blue: std_logic_vector(0 downto 0);
@@ -140,9 +143,6 @@ architecture struct of amiga_ffm_c5a4_sd is
 	signal VTEMP_DAC		:std_logic_vector(4 downto 0);
 	signal audio_data : std_logic_vector(17 downto 0);
 	signal convert_audio_data : std_logic_vector(17 downto 0);
-
-	signal DAC_R : std_logic;
-	signal DAC_L : std_logic;
 
 	signal l_audio_ena    : boolean; 
 	signal r_audio_ena    : boolean;
@@ -431,8 +431,6 @@ begin
     data_in => S_audio,
     spdif_out => S_spdif_out
   );
-  --audio_r <= DAC_R;
-  --audio_l <= DAC_L;
   -- audio_v(1 downto 0) <= (others => S_spdif_out);
   end generate;
 
