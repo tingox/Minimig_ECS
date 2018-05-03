@@ -7,15 +7,15 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.ALL;
 use IEEE.numeric_std.all;
+-- use IEEE.MATH_REAL.ALL;
 
---library unisim;
---use unisim.vcomponents.all;
+library unisim;
+use unisim.vcomponents.all;
 
 entity amiga_ffm_a7100 is
 generic
 (
-  C_flea_av: boolean := false; -- use original flea's hdmi audio/video, false: use emard's audio/video
-  C_flea_hdmi_audio: boolean := false -- great for digital TV's but incompatible for most PC monitors
+  C_dvid_ddr: boolean := false -- true: use vendor-specific DDR-differential output buffeers
 );
 port
 (
@@ -55,19 +55,24 @@ port
   dv_lrclk: inout std_logic;
   dv_d: inout std_logic_vector(23 downto 0);
   -- Low-Cost HDMI video out
-  vid_d_p, vid_d_n: out std_logic_vector(2 downto 0);
-  vid_clk_p, vid_clk_n: out std_logic
+  vid_d_p, vid_d_n: out std_logic_vector(3 downto 0)
 );
 end;
 
 architecture struct of amiga_ffm_a7100 is
   -- keyboard
-  alias ps2_clk1 : std_logic is fioa(0);
-  alias ps2_data1 : std_logic is fioa(1);
+  alias ps2_clk1 : std_logic is fioa(6);
+  alias ps2_data1 : std_logic is fioa(4);
   signal PS_enable: std_logic;
   -- mouse
-  alias ps2_clk2 : std_logic is fioa(2);
-  alias ps2_data2 : std_logic is fioa(3);
+  alias ps2_clk2 : std_logic is fioa(3);
+  alias ps2_data2 : std_logic is fioa(1);
+
+  alias DAC_L: std_logic is fioa(2);
+  alias DAC_R: std_logic is fioa(0);
+
+  alias led_floppy: std_logic is fioa(5);
+  alias led_power: std_logic is fioa(7);
 
   signal LVDS_Red: std_logic_vector(0 downto 0);
   signal LVDS_Green: std_logic_vector(0 downto 0);
@@ -86,6 +91,8 @@ architecture struct of amiga_ffm_a7100 is
   alias mmc_miso: std_logic is sd_m_d(0);
   -- END ALIASING
 
+  signal clk_100MHz: std_logic; -- converted from differential to single ended
+  signal clk_fb_main, clk_fb_sdram: std_logic; -- feedback internally used in clock generator
   signal clk: std_logic := '0';	
   signal clk7m: std_logic := '0';
   signal clk28m: std_logic := '0';   
@@ -115,24 +122,15 @@ architecture struct of amiga_ffm_a7100 is
   signal dvi_hsync   : std_logic := '0';
   signal dvi_vsync   : std_logic := '0';
   
-  signal clk_dvi  : std_logic := '0';
-  signal clk_dvin : std_logic := '0'; 
+  signal clk_dvi, clk140m, clk281m: std_logic := '0';
  
   signal temp_we : std_logic := '0';
   signal diskoff : std_logic;
 	
-  signal pwm_accumulator : std_logic_vector(8 downto 0);
-	
-  -- signal clk_vga   : std_logic := '0';
-  signal PLL_lock  : std_logic := '0';
   signal n_15khz   : std_logic := '1';
 
-  signal VTEMP_DAC		:std_logic_vector(4 downto 0);
   signal audio_data : std_logic_vector(17 downto 0);
   signal convert_audio_data : std_logic_vector(17 downto 0);
-
-  signal DAC_R : std_logic;
-  signal DAC_L : std_logic;
 
   signal l_audio_ena    : boolean; 
   signal r_audio_ena    : boolean;
@@ -147,7 +145,7 @@ architecture struct of amiga_ffm_a7100 is
   signal   right_sampled:	std_logic_vector(15 downto 0);
 	 
   constant pll_reset: std_logic := '0';
-  signal pll_locked, pll_locked1: std_logic;
+  signal pll_locked_main, pll_locked_sdram: std_logic;
   signal reset: std_logic;
   signal reset_n: std_logic;
   signal reset_combo1: std_logic;
@@ -155,38 +153,12 @@ architecture struct of amiga_ffm_a7100 is
   -- emard audio-video and aliasing
   signal S_audio: std_logic_vector(23 downto 0) := (others => '0');
   signal S_spdif_out: std_logic;
-  signal ddr_d: std_logic_vector(2 downto 0);
-  signal ddr_clk: std_logic;
-  signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
+  signal ddr_d: std_logic_vector(3 downto 0);
+  signal dvid_crgb: std_logic_vector(7 downto 0); -- clock, red, green, blue
   alias clk_pixel: std_logic is clk28m;
   alias clk_pixel_shift: std_logic is clk_dvi;
-  alias clkn_pixel_shift: std_logic is clk_dvin;
   -- end emard AV
   signal sw: std_logic_vector(3 downto 0) := (others => '1');
-
-  component clk_d100_112sMHz is
-  port
-  (
-      clk_in1     : in STD_LOGIC;
-      clk_112m5s  : out STD_LOGIC;
-      reset: in STD_LOGIC;
-      locked: out STD_LOGIC
-  );
-  end component clk_d100_112sMHz;
-  component clk_d100_112_7_28_140_280MHz is
-  port
-  (
-      clk_in1_p   : in STD_LOGIC;
-      clk_in1_n   : in STD_LOGIC;
-      clk_112m5   : out STD_LOGIC;
-      clk_7m03125 : out STD_LOGIC;
-      clk_28m125  : out STD_LOGIC;
-      clk_140m625 : out STD_LOGIC;
-      clk_281m25  : out STD_LOGIC;
-      reset: in STD_LOGIC;
-      locked: out STD_LOGIC
-  );
-  end component clk_d100_112_7_28_140_280MHz;
 begin
   -- btn(0) used as reset has inverted logic
   sys_reset <= '1'; -- '1' is not reset, '0' is reset
@@ -226,30 +198,66 @@ begin
   ps2m_clk_in<=PS2_clk2;
   PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
   
-  clk_pll_0: clk_d100_112_7_28_140_280MHz
+  clkin_ibufgds: ibufgds
+  port map (I => clk_100MHz_P, IB => clk_100MHz_N, O => clk_100MHz);
+
+  clk_main: mmcme2_base
+  generic map
+  (
+    clkin1_period    => 10.0,       --   100      MHz (10 ns)
+    clkfbout_mult_f  => 16.875,     --  1687.5    MHz *16.875 common multiply
+    divclk_divide    => 2,          --   843.75   MHz /2 common divide
+    clkout0_divide_f => 7.5,        --  112.5     MHz /7.5 divide
+    clkout1_divide   => 120,        --    7.03125 MHz /120 divide
+    clkout2_divide   => 30,         --   28.125   MHz /30 divide
+    clkout3_divide   => 6,          --  140.625   MHz /6 divide
+    clkout4_divide   => 3,          --  281.25    MHz /3 divide
+    bandwidth        => "LOW"
+  )
   port map
   (
-    clk_in1_p   => clk_100mhz_p, -- 100 MHz +
-    clk_in1_n   => clk_100mhz_n, -- 100 MHz -
-    clk_7m03125 => clk7m,
-    clk_28m125  => clk28m,
-    clk_140m625 => open,
-    clk_281m25  => clk_dvi,
-    clk_112m5   => clk,
-    reset       => pll_reset,
-    locked      => pll_locked
+    pwrdwn   => '0',
+    rst      => '0',
+    clkin1   => clk_100MHz,
+    clkfbin  => clk_fb_main,
+    clkfbout => clk_fb_main,
+    clkout0  => clk,                --  112.5     MHz
+    clkout1  => clk7m,              --    7.03125 MHz
+    clkout2  => clk28m,             --   28.125   MHz
+    clkout3  => clk140m,            --  140.625   MHz
+    clkout4  => clk281m,            --  281.25    MHz
+    locked   => pll_locked_main
   );
 
-  clk_pll_1: clk_d100_112sMHz
+  G_clk_dvi_sdr: if not C_dvid_ddr generate
+    clk_dvi <= clk281m;
+  end generate;
+  G_clk_dvi_ddr: if C_dvid_ddr generate
+    clk_dvi <= clk140m;
+  end generate;
+
+  clk_sdram: mmcme2_base
+  generic map
+  (
+    clkin1_period    => 8.88888888, --   112.5    MHz (8.88888 ns)
+    clkfbout_mult_f  => 10.0,       --  1125.0    MHz *10 common multiply
+    divclk_divide    => 1,          --  1125.0    MHz /1  common divide
+    clkout0_divide_f => 10.0,       --  112.5     MHz /10 divide
+    clkout0_phase    => 144.0,      --            deg phase shift (multiple of 45/clkout0_divide_f = 4.5)
+    bandwidth        => "LOW"
+  )
   port map
   (
-    clk_in1     => clk,          -- 112.5 MHz
-    clk_112m5s  => dr_clk,       -- 112.5 MHz phase shifted 144 deg
-    reset       => pll_reset,
-    locked      => pll_locked1
+    pwrdwn   => '0',
+    rst      => '0',
+    clkin1   => clk,
+    clkfbin  => clk_fb_sdram,
+    clkfbout => clk_fb_sdram,
+    clkout0  => dr_clk,             --  112.5     MHz phase shifted
+    locked   => pll_locked_sdram
   );
 
-  reset_combo1 <= sys_reset and pll_locked and pll_locked1;
+  reset_combo1 <= sys_reset and pll_locked_main and pll_locked_sdram;
 		
   u10 : entity work.poweronreset
   port map
@@ -257,12 +265,11 @@ begin
     clk => clk,
     reset_button => reset_combo1,
     reset_out => reset_n
-    --power_button => power_button,
-    --power_hold => power_hold		
   );
   reset <= not reset_n;
 		
-  -- led <= not diskoff; -- no LED at FFM-A7100
+  led_floppy <= not diskoff; -- LED at EXPMOD PS/2 adapter
+  led_Power <= reset_n; -- LED at EXPMOD PS/2 adapter
 
   myFampiga: entity work.Fampiga
   port map
@@ -333,113 +340,7 @@ begin
   dr_d(31 downto 16) <= (others => 'Z');
   dr_dqm(3 downto 2) <= (others => '1');
 
-  flea_video: if C_flea_av generate
-    -- Audio output mapped to 3.5mm jack
-    --audio_r <= DAC_R;
-    --audio_l <= DAC_L;
-    process(clk28m)
-    begin
-      if rising_edge(clk28m) then
-	red <= std_logic_vector(red_u) & "0000";
-	green <= std_logic_vector(green_u) & "0000";
-	blue <= std_logic_vector(blue_u) & "0000";  
-	--blank <= hsync AND vsync;
-	blank <= videoblank;	
-	dvi_hsync <= hsync;
-	dvi_vsync <= vsync;
-      end if;
-    end process;    
-
-    left_sampled <= leftdatasum(14 downto 0) & '0';
-    right_sampled <= rightdatasum(14 downto 0) & '0';
-    red(7 downto 4) <= red_u;
-    green(7 downto 4) <= green_u;
-    blue(7 downto 4) <= blue_u;
-
-    Inst_DVI: entity work.dvid 
-    --GENERIC MAP (
-    --  Invert_Red => true,
-    --  Invert_Green => true,
-    --  Invert_Blue => true,
-    --  Invert_Clock => true
-    --)
-    PORT MAP
-    (
-    clk		  => clk_dvi,
-    clk_n         => clk_dvin,	 
-    clk_pixel     => clk28m,
-    clk_pixel_en  => true, 
-
-    red_p         => red,
-    green_p       => green,
-    blue_p        => blue,
-    blank         => blank,
-    hsync         => dvi_hsync, 
-    vsync         => dvi_vsync,
-    EnhancedMode  => C_flea_hdmi_audio,
-    IsProgressive => true, 
-    IsPAL  	  => true, 
-    Is30kHz  	  => true,
-    Limited_Range => false,
-    Widescreen    => true,
-    HDMI_audio_L  => left_sampled,
-    HDMI_audio_R  => right_sampled,
-    HDMI_LeftEnable  => l_audio_ena,
-    HDMI_RightEnable => l_audio_ena,
-    dvid_red      => dvid_red,
-    dvid_green    => dvid_green,
-    dvid_blue     => dvid_blue,
-    dvid_clock    => dvid_clock,
-    red_s         => LVDS_Red,
-    green_s       => LVDS_Green, 
-    blue_s        => LVDS_Blue,
-    clock_s       => LVDS_ck
-    ); 
-  
-    process(clk28m)
-    begin
-    if rising_edge(clk28m) then
-      if cnt=cnt_div-1 then
-        ce  <= '1';
-        cnt <= 0; 
-      else
-        ce  <= '0';
-        cnt <= cnt +1 ;
-      end if;
-    end if;
-    end process;
-
-    process(clk28m)
-    begin
-    if rising_edge(clk28m) then
-      if ce='1' then
-        l_audio_ena <= true;
-      else
-        l_audio_ena <= false;
-      end if;
-    end if;
-    end process;
-
-    -- this module instantiates vendor specific modules ddr_out to
-    -- convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
-    G_vgatext_ddrout_flea: entity work.ddr_dvid_out_se
-    port map
-    (
-    clk       => clk_pixel_shift,
-    clk_n     => clkn_pixel_shift,
-    in_red    => dvid_red,
-    in_green  => dvid_green,
-    in_blue   => dvid_blue,
-    in_clock  => dvid_clock,
-    out_red   => ddr_d(2),
-    out_green => ddr_d(1),
-    out_blue  => ddr_d(0),
-    out_clock => ddr_clk
-    );
-  end generate;
-
-  emard_video: if not C_flea_av generate
-  no_audio: if false generate -- disable audio generation, doesn't fit on device
+  no_spdif_audio: if false generate -- disable audio generation, doesn't fit on device
   S_audio(23 downto 9) <= leftdatasum(14 downto 0);
   G_spdif_out: entity work.spdif_tx
   generic map
@@ -453,22 +354,19 @@ begin
     data_in => S_audio,
     spdif_out => S_spdif_out
   );
-  --audio_r <= DAC_R;
-  --audio_l <= DAC_L;
   -- audio_v(1 downto 0) <= (others => S_spdif_out);
   end generate;
 
-  g_vga2dvi: if true generate
   vga2dvi_converter: entity work.vga2dvid
   generic map
   (
-      C_ddr     => false,
+      C_ddr     => C_dvid_ddr,
       C_depth   => 4 -- 4bpp (4 bit per pixel)
   )
   port map
   (
       clk_pixel => clk_pixel, -- 28 MHz
-      clk_shift => clk_pixel_shift, -- 5*28 MHz for DDR or 10*28 MHz for SDR
+      clk_shift => clk_pixel_shift, -- 5*28 MHz
 
       in_red   => red_u,
       in_green => green_u,
@@ -478,27 +376,30 @@ begin
       in_vsync => vsync,
       in_blank => videoblank,
 
-      -- single-ended output ready for differential buffers
-      out_red   => dvid_red,
-      out_green => dvid_green,
-      out_blue  => dvid_blue,
-      out_clock => dvid_clock
+      -- single-ended output ready for vedor specific output buffers
+      out_clock => dvid_crgb(7 downto 6),
+      out_red   => dvid_crgb(5 downto 4),
+      out_green => dvid_crgb(3 downto 2),
+      out_blue  => dvid_crgb(1 downto 0)
   );
 
-    -- single ended outputs simulating differential buffering for DVI clock and video
-    dvi_output: entity work.hdmi_out
-      port map
-      (
-        tmds_in_rgb    => dvid_red(0) & dvid_green(0) & dvid_blue(0),
-        tmds_out_rgb_p => vid_d_p,   -- D2+ red  D1+ green  D0+ blue
-        tmds_out_rgb_n => vid_d_n,   -- D2- red  D1- green  D0- blue
-        tmds_in_clk    => dvid_clock(0),
-        tmds_out_clk_p => vid_clk_p, -- CLK+ clock
-        tmds_out_clk_n => vid_clk_n  -- CLK- clock
-      );
-  end generate; -- low-cost video
+  G_dvi_sdr: if not C_dvid_ddr generate
+  -- no vendor specific DDR and differntial buffers
+  -- clk_pixel_shift = 10x clk_pixel
+  gpdi_sdr_se: for i in 0 to 3 generate
+    vid_d_p(i) <= dvid_crgb(2*i);
+    vid_d_n(i) <= not dvid_crgb(2*i);
+  end generate;
+  end generate;
 
-  end generate; -- if not C_flea_av
+  G_dvi_ddr: if C_dvid_ddr generate
+  -- vendor specific DDR and differential buffers
+  -- clk_pixel_shift = 5x clk_pixel
+  gpdi_ddr_diff: for i in 0 to 3 generate
+    gpdi_ddr:   oddr generic map (DDR_CLK_EDGE => "SAME_EDGE", INIT => '0', SRTYPE => "SYNC") port map (D1=>dvid_crgb(2*i), D2=>dvid_crgb(2*i+1), Q=>ddr_d(i), C=>clk_pixel_shift, CE=>'1', R=>'0', S=>'0');
+    gpdi_diff:  obufds port map(i => ddr_d(i), o => vid_d_p(i), ob => vid_d_n(i));
+  end generate;
+  end generate;
 
     -- adv7513 routing
     dv_clk <= clk_pixel;
