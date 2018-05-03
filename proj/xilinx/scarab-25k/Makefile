@@ -48,7 +48,7 @@ clocks/clk_50_28_140_7_116.vhd \
 ../../../Minimig_ECS/impl1/source/TG68K_ALU.vhd \
 ../../../Minimig_ECS/impl1/source/TG68K_Pack.vhd \
 ../../../Minimig_ECS/impl1/source/TG68KdotC_Kernel.vhd \
-../../../Minimig_ECS/impl1/source/poweronreset.vhd \
+../../../source_emard/poweronreset.vhd \
 ../../../osd_bootstrap.vhd \
 ../../../Minimig_ECS/impl1/source/HDMI/aux_ecc1.vhd \
 ../../../Minimig_ECS/impl1/source/HDMI/aux_ecc2.vhd \

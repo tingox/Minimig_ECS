@@ -209,7 +209,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../Minimig_ECS/impl1/source/poweronreset.vhd">
+      <File Path="$PPRDIR/../../../source_emard/poweronreset.vhd">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
