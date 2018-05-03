@@ -62,12 +62,18 @@ end;
 
 architecture struct of amiga_ffm_a7100 is
   -- keyboard
-  alias ps2_clk1 : std_logic is fioa(0);
-  alias ps2_data1 : std_logic is fioa(1);
+  alias ps2_clk1 : std_logic is fioa(6);
+  alias ps2_data1 : std_logic is fioa(4);
   signal PS_enable: std_logic;
   -- mouse
-  alias ps2_clk2 : std_logic is fioa(2);
-  alias ps2_data2 : std_logic is fioa(3);
+  alias ps2_clk2 : std_logic is fioa(3);
+  alias ps2_data2 : std_logic is fioa(1);
+
+  alias DAC_L: std_logic is fioa(2);
+  alias DAC_R: std_logic is fioa(0);
+
+  alias led_floppy: std_logic is fioa(5);
+  alias led_power: std_logic is fioa(7);
 
   signal LVDS_Red: std_logic_vector(0 downto 0);
   signal LVDS_Green: std_logic_vector(0 downto 0);
@@ -127,9 +133,6 @@ architecture struct of amiga_ffm_a7100 is
 
   signal audio_data : std_logic_vector(17 downto 0);
   signal convert_audio_data : std_logic_vector(17 downto 0);
-
-  signal DAC_R : std_logic;
-  signal DAC_L : std_logic;
 
   signal l_audio_ena    : boolean; 
   signal r_audio_ena    : boolean;
@@ -261,7 +264,8 @@ begin
   );
   reset <= not reset_n;
 		
-  -- led <= not diskoff; -- no LED at FFM-A7100
+  led_floppy <= not diskoff; -- LED at EXPMOD PS/2 adapter
+  led_Power <= reset_n; -- LED at EXPMOD PS/2 adapter
 
   myFampiga: entity work.Fampiga
   port map
@@ -332,7 +336,7 @@ begin
   dr_d(31 downto 16) <= (others => 'Z');
   dr_dqm(3 downto 2) <= (others => '1');
 
-  no_audio: if false generate -- disable audio generation, doesn't fit on device
+  no_spdif_audio: if false generate -- disable audio generation, doesn't fit on device
   S_audio(23 downto 9) <= leftdatasum(14 downto 0);
   G_spdif_out: entity work.spdif_tx
   generic map
@@ -346,8 +350,6 @@ begin
     data_in => S_audio,
     spdif_out => S_spdif_out
   );
-  --audio_r <= DAC_R;
-  --audio_l <= DAC_L;
   -- audio_v(1 downto 0) <= (others => S_spdif_out);
   end generate;
 
