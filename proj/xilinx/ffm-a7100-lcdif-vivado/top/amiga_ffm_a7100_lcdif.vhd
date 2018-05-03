@@ -308,8 +308,8 @@ begin
     ps2m_dat_out => ps2m_dat_out,
 
     -- Audio
-    sigmaL => open, -- DAC_L,
-    sigmaR => open, -- DAC_R,
+    sigmaL => DAC_L,
+    sigmaR => DAC_R,
     leftdatasum => leftdatasum,
     rightdatasum => rightdatasum,
 
