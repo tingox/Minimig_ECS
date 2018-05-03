@@ -236,7 +236,7 @@ begin
     clkfbout_mult_f  => 10.0,       --  1125.0    MHz *10 common multiply
     divclk_divide    => 1,          --  1125.0    MHz /1  common divide
     clkout0_divide_f => 10.0,       --  112.5     MHz /10 divide
-    clkout0_phase    => 153.0,      --            deg phase shift (multiple of 45/clkout0_divide_f = 4.5)
+    clkout0_phase    => 162.0,      --            deg phase shift (multiple of 45/clkout0_divide_f = 4.5)
     bandwidth        => "LOW"
   )
   port map
@@ -258,8 +258,6 @@ begin
     clk => clk,
     reset_button => reset_combo1,
     reset_out => reset_n
-    --power_button => power_button,
-    --power_hold => power_hold		
   );
   reset <= not reset_n;
 		
@@ -331,7 +329,6 @@ begin
     sd_clk => mmc_clk
   );
 
-  -- dr_clk <= not clk;
   dr_d(31 downto 16) <= (others => 'Z');
   dr_dqm(3 downto 2) <= (others => '1');
 
