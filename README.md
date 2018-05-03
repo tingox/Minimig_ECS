@@ -5,7 +5,7 @@ and making it more portable to work on Altera, Lattice
 and Xilinx. Also used to test compatibility of various
 vendors and boards when running a complex project.
 
-    Altera Cycline-V (5CEBA4F23C7)
+    Altera Cyclone-V (5CEBA4F23C7)
     Lattice ECP5 (LFE5U-25F-6BG381C and LFE5U-45F-6BG381C)
     Xilinx Artix-7 (XC7A100T-FGG484-2)
 
