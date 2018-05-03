@@ -93,7 +93,7 @@
         <Source name="../../../Minimig_ECS/impl1/source/Userio.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="../../../Minimig_ECS/impl1/source/poweronreset.vhd" type="VHDL" type_short="VHDL">
+        <Source name="../../../source_emard/poweronreset.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
         <Source name="../../../osd_bootstrap.vhd" type="VHDL" type_short="VHDL">
