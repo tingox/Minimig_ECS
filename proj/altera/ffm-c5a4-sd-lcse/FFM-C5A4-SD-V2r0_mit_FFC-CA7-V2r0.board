@@ -131,16 +131,16 @@ set_location_assignment PIN_Y20 -to USB_DIR
 set_location_assignment PIN_U21 -to USB_NXT
 set_location_assignment PIN_Y19 -to USB_STP
 #
-#	Low cost digital video (on tms141)
+#	Low cost digital video (on TMS141)
 #
-set_location_assignment PIN_L1 -to vid_clk_n
-set_location_assignment PIN_L2 -to vid_clk_p
 set_location_assignment PIN_AA1 -to vid_d_n[0] # blue-
 set_location_assignment PIN_AA2 -to vid_d_p[0] # blue+
 set_location_assignment PIN_U1 -to vid_d_n[1] # green-
 set_location_assignment PIN_U2 -to vid_d_p[1] # green+
 set_location_assignment PIN_N1 -to vid_d_n[2] # red-
 set_location_assignment PIN_N2 -to vid_d_p[2] # red+
+set_location_assignment PIN_L1 -to vid_d_n[3] # clock-
+set_location_assignment PIN_L2 -to vid_d_p[3] # clock+
 set_location_assignment PIN_C1 -to vid_rscl
 set_location_assignment PIN_G1 -to vid_rsda
 set_location_assignment PIN_C2 -to vid_src
