@@ -13,11 +13,10 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity amiga_ffm_a7100 is
---generic
---(
---  C_flea_av: boolean := false; -- use original flea's hdmi audio/video, false: use emard's audio/video
---  C_flea_hdmi_audio: boolean := false -- great for digital TV's but incompatible for most PC monitors
---);
+generic
+(
+  C_dvid_ddr: boolean := true -- use vendor-specific DDR-differential output buffeers
+);
 port
 (
   clk_100mhz_p, clk_100mhz_n: in std_logic;
@@ -356,7 +355,7 @@ begin
   vga2dvi_converter: entity work.vga2dvid
   generic map
   (
-      C_ddr     => true,
+      C_ddr     => C_dvid_ddr,
       C_depth   => 4 -- 4bpp (4 bit per pixel)
   )
   port map
@@ -379,10 +378,22 @@ begin
       out_blue  => dvid_crgb(1 downto 0)
   );
 
-  -- vendor specific DDR and differential modules
+  G_dvi_sdr: if not C_dvid_ddr generate
+  -- no vendor specific DDR and differntial buffers
+  -- clk_pixel_shift = 10x clk_pixel
+  gpdi_sdr_se: for i in 0 to 3 generate
+    vid_d_p(i) <= dvid_crgb(2*i);
+    vid_d_n(i) <= not dvid_crgb(2*i);
+  end generate;
+  end generate;
+
+  G_dvi_ddr: if C_dvid_ddr generate
+  -- vendor specific DDR and differential buffers
+  -- clk_pixel_shift = 5x clk_pixel
   gpdi_ddr_diff: for i in 0 to 3 generate
-    gpdi_ddr:   oddr generic map (DDR_CLK_EDGE => "SAME_EDGE", INIT => '0', SRTYPE => "SYNC") port map (D1=>dvid_crgb(2*i+0), D2=>dvid_crgb(2*i+1), Q=>ddr_d(i), C=>clk_pixel_shift, CE=>'1', R=>'0', S=>'0');
+    gpdi_ddr:   oddr generic map (DDR_CLK_EDGE => "SAME_EDGE", INIT => '0', SRTYPE => "SYNC") port map (D1=>dvid_crgb(2*i), D2=>dvid_crgb(2*i+1), Q=>ddr_d(i), C=>clk_pixel_shift, CE=>'1', R=>'0', S=>'0');
     gpdi_diff:  obufds port map(i => ddr_d(i), o => vid_d_p(i), ob => vid_d_n(i));
+  end generate;
   end generate;
 
     -- adv7513 routing
