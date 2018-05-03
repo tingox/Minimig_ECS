@@ -236,7 +236,7 @@ begin
     clkfbout_mult_f  => 10.0,       --  1125.0    MHz *10 common multiply
     divclk_divide    => 1,          --  1125.0    MHz /1  common divide
     clkout0_divide_f => 10.0,       --  112.5     MHz /10 divide
-    clkout0_phase    => 162.0,      --            deg phase shift (multiple of 45/clkout0_divide_f = 4.5)
+    clkout0_phase    => 144.0,      --            deg phase shift (multiple of 45/clkout0_divide_f = 4.5)
     bandwidth        => "LOW"
   )
   port map
