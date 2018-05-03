@@ -94,9 +94,7 @@ architecture struct of amiga_ffm_c5a4_sd is
   signal clk7m  : std_logic := '0';
   signal clk28m  : std_logic := '0';   
  
-  signal aud_l  : std_logic;
-  signal aud_r  : std_logic;  
-  signal dma_1  : std_logic := '1'; 
+  signal leftdatasum, rightdatasum: std_logic_vector(14 downto 0);
  
   signal n_joy1   : std_logic_vector(5 downto 0);
   signal n_joy2   : std_logic_vector(5 downto 0);
@@ -124,7 +122,7 @@ architecture struct of amiga_ffm_c5a4_sd is
   signal blank   : std_logic := '0';
   signal videoblank: std_logic;  
   
-  signal clk_dvi  : std_logic := '0';
+  signal clk_dvi, clk140m, clk281m: std_logic := '0';
  
   signal diskoff : std_logic;
 	
@@ -167,6 +165,9 @@ architecture struct of amiga_ffm_c5a4_sd is
     output_clock_frequency4: string;
     phase_shift4: string;
     duty_cycle4: integer;
+    output_clock_frequency5: string;
+    phase_shift5: string;
+    duty_cycle5: integer;
     -- up to output_clock_frequency17
     pll_type: string;
     pll_subtype: string
@@ -226,7 +227,7 @@ begin
     fractional_vco_multiplier => "false",
     reference_clock_frequency => "50.0 MHz",
     operation_mode => "direct",
-    number_of_clocks => 5,
+    number_of_clocks => 6,
     output_clock_frequency0 => "28.125000 MHz",
     phase_shift0 => "0 ps",
     duty_cycle0 => 50,
@@ -242,6 +243,9 @@ begin
     output_clock_frequency4 => "7.031250 MHz",
     phase_shift4 => "0 ps",
     duty_cycle4 => 50,
+    output_clock_frequency5 => "140.625000 MHz",
+    phase_shift5 => "0 ps",
+    duty_cycle5 => 50,
     pll_type => "General",
     pll_subtype => "General"
   )
@@ -250,14 +254,22 @@ begin
     refclk => sys_clock, --  50 MHz input
     rst	=> '0',
     outclk(0) => clk28m,
-    outclk(1) => clk_dvi,   -- 281.25    MHz
+    outclk(1) => clk281m,   -- 281.25    MHz
     outclk(2) => clk,       -- 112.5     MHz
     outclk(3) => open,      -- 112.5     MHz 144 deg phase
     outclk(4) => clk7m,     --   7.03125 MHz
+    outclk(5) => clk140m,   -- 140.625   MHz
     fboutclk  => open,
     fbclk     => '0',
     locked    => pll_locked
   );
+
+  G_clk_dvi_sdr: if not C_dvid_ddr generate
+    clk_dvi <= clk281m;
+  end generate;
+  G_clk_dvi_ddr: if C_dvid_ddr generate
+    clk_dvi <= clk140m;
+  end generate;
 
   reset_combo1 <= sys_reset and pll_locked;
 		
@@ -318,9 +330,9 @@ begin
     -- Audio
     sigmaL => DAC_L,
     sigmaR => DAC_R,
-    leftdatasum => leftdatasum,
-    rightdatasum => rightdatasum,
-		
+    leftdatasum => open,
+    rightdatasum => open,
+
     -- Game ports
     n_joy1 => n_joy1,
     n_joy2 => n_joy2,		
