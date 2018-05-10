@@ -71,8 +71,8 @@ architecture struct of amiga_ffm_a7100 is
   alias DAC_L: std_logic is fioa(2);
   alias DAC_R: std_logic is fioa(0);
 
-  alias led_floppy: std_logic is fioa(5);
-  alias led_power: std_logic is fioa(7);
+  alias led_power: std_logic is fioa(5); -- green LED
+  alias led_floppy: std_logic is fioa(7); -- red LED
 
   signal LVDS_Red: std_logic_vector(0 downto 0);
   signal LVDS_Green: std_logic_vector(0 downto 0);
@@ -189,14 +189,18 @@ begin
 
   -- PS/2 Keyboard and Mouse definitions
   ps2k_dat_in<=PS2_data1;
-  PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
+  -- PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
+  PS2_data1 <= 'Z';
   ps2k_clk_in<=PS2_clk1;
-  PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
+  -- PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';
+  PS2_clk1 <= 'Z';
  
   ps2m_dat_in<=PS2_data2;
-  PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
+  -- PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
+  PS2_data2 <= 'Z';
   ps2m_clk_in<=PS2_clk2;
-  PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
+  -- PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';
+  PS2_clk2 <= 'Z';
   
   clkin_ibufgds: ibufgds
   port map (I => clk_100MHz_P, IB => clk_100MHz_N, O => clk_100MHz);

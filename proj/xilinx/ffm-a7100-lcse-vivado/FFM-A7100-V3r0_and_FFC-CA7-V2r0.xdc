@@ -327,14 +327,14 @@ set_property -dict {PACKAGE_PIN AB11 IOSTANDARD LVTTL DRIVE 12 SLEW FAST} [get_p
 #
 #	FIOs (unassigned part)
 #
-set_property -dict {PACKAGE_PIN M17 IOSTANDARD LVTTL} [get_ports fioa[0]]
-set_property -dict {PACKAGE_PIN L16 IOSTANDARD LVTTL} [get_ports fioa[1]]
-set_property -dict {PACKAGE_PIN L20 IOSTANDARD LVTTL} [get_ports fioa[2]]
-set_property -dict {PACKAGE_PIN L19 IOSTANDARD LVTTL} [get_ports fioa[3]]
-set_property -dict {PACKAGE_PIN K16 IOSTANDARD LVTTL} [get_ports fioa[4]]
-set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVTTL} [get_ports fioa[5]]
-set_property -dict {PACKAGE_PIN J17 IOSTANDARD LVTTL} [get_ports fioa[6]]
-set_property -dict {PACKAGE_PIN H17 IOSTANDARD LVTTL} [get_ports fioa[7]]
+set_property -dict {PACKAGE_PIN M17 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[0]]
+set_property -dict {PACKAGE_PIN L16 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[1]]
+set_property -dict {PACKAGE_PIN L20 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[2]]
+set_property -dict {PACKAGE_PIN L19 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[3]]
+set_property -dict {PACKAGE_PIN K16 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[4]]
+set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[5]]
+set_property -dict {PACKAGE_PIN J17 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[6]]
+set_property -dict {PACKAGE_PIN H17 IOSTANDARD LVTTL PULLUP TRUE} [get_ports fioa[7]]
 
 set_property -dict {PACKAGE_PIN F20 IOSTANDARD LVTTL} [get_ports fiob[20]]
 set_property -dict {PACKAGE_PIN F19 IOSTANDARD LVTTL} [get_ports fiob[21]]
