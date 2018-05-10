@@ -65,13 +65,15 @@ architecture struct of amiga_ffm_c5a4_sd is
   -- keyboard
   alias ps2_clk1 : std_logic is fio(6);
   alias ps2_data1 : std_logic is fio(4);
-  signal PS_enable: std_logic;
   -- mouse
   alias ps2_clk2 : std_logic is fio(3);
   alias ps2_data2 : std_logic is fio(1);
 
   alias DAC_L: std_logic is fio(2);
   alias DAC_R: std_logic is fio(0);
+
+  alias led_power: std_logic is fio(5); -- green LED
+  alias led_floppy: std_logic is fio(7); -- red LED
 
   signal LVDS_Red: std_logic_vector(0 downto 0);
   signal LVDS_Green: std_logic_vector(0 downto 0);
@@ -100,13 +102,13 @@ architecture struct of amiga_ffm_c5a4_sd is
   signal n_joy2   : std_logic_vector(5 downto 0);
  
   signal ps2k_clk_in : std_logic;
-  signal ps2k_clk_out : std_logic;
+  signal ps2k_clk_out : std_logic := '1';
   signal ps2k_dat_in : std_logic;
-  signal ps2k_dat_out : std_logic;	
+  signal ps2k_dat_out : std_logic := '1';	
   signal ps2m_clk_in : std_logic;
-  signal ps2m_clk_out : std_logic;
+  signal ps2m_clk_out : std_logic := '1';
   signal ps2m_dat_in : std_logic;
-  signal ps2m_dat_out : std_logic;	
+  signal ps2m_dat_out : std_logic := '1';	
  
   signal red_u     : std_logic_vector(3 downto 0);
   signal green_u   : std_logic_vector(3 downto 0);
@@ -212,14 +214,18 @@ begin
 
   -- PS/2 Keyboard and Mouse definitions
   ps2k_dat_in<=PS2_data1;
-  PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
+  -- PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
+  PS2_data1 <= 'Z';
   ps2k_clk_in<=PS2_clk1;
-  PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
+  -- PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
+  PS2_clk1 <= 'Z';
  
   ps2m_dat_in<=PS2_data2;
-  PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
+  -- PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
+  PS2_data2 <= 'Z';
   ps2m_clk_in<=PS2_clk2;
-  PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
+  -- PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
+  PS2_clk2 <= 'Z';
   
   clk_pll: altera_pll
   generic map
@@ -253,7 +259,7 @@ begin
   (
     refclk => sys_clock, --  50 MHz input
     rst	=> '0',
-    outclk(0) => clk28m,
+    outclk(0) => clk28m,    --  28.125   MHz
     outclk(1) => clk281m,   -- 281.25    MHz
     outclk(2) => clk,       -- 112.5     MHz
     outclk(3) => open,      -- 112.5     MHz 144 deg phase
@@ -285,6 +291,8 @@ begin
   reset <= not reset_n;
 		
   led <= diskoff;
+  led_floppy <= not diskoff; -- LED at EXPMOD PS/2 adapter
+  led_power <= reset_n; -- LED at EXPMOD PS/2 adapter
 
   myFampiga: entity work.Fampiga
   port map
@@ -319,13 +327,13 @@ begin
 
     -- PS/2
     ps2k_clk_in => ps2k_clk_in,
-    ps2k_clk_out => ps2k_clk_out,
+    ps2k_clk_out => open, -- ps2k_clk_out,
     ps2k_dat_in => ps2k_dat_in,
-    ps2k_dat_out => ps2k_dat_out,
+    ps2k_dat_out => open, -- ps2k_dat_out,
     ps2m_clk_in => ps2m_clk_in,
-    ps2m_clk_out => ps2m_clk_out,
+    ps2m_clk_out => open, -- ps2m_clk_out,
     ps2m_dat_in => ps2m_dat_in,
-    ps2m_dat_out => ps2m_dat_out,
+    ps2m_dat_out => open, -- ps2m_dat_out,
 
     -- Audio
     sigmaL => DAC_L,

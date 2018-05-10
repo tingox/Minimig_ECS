@@ -288,6 +288,14 @@ set_location_assignment PIN_F9 -to fio[23]
 #set_location_assignment PIN_G15 -to fio[67] # (B7A_12P)
 #set_location_assignment PIN_F14 -to fio[68] # (B7A_12N)
 #set_location_assignment PIN_E15 -to fio[69] # (B7A_7P)
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[0]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[5]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[6]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to fio[7]
 #
 #	JTAG etc, not used in designs?
 #
