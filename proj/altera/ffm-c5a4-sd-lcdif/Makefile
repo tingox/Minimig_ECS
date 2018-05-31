@@ -38,8 +38,6 @@ include ../include/altera.mk
 # Setup your sources here
 SRCS = \
 top/amiga_ffm_c5a4_sd.vhd \
-clocks/clk_28_280_112_112s_7.vhd \
-clocks/clk_28_280_112_112s_7_0002.v \
 ../../../Minimig_ECS/impl1/source/Fampiga.vhd \
 ../../../source_emard/cfide.vhd \
 ../../../Minimig_ECS/impl1/source/Debounce.vhd \
