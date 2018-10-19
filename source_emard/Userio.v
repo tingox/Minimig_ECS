@@ -201,20 +201,28 @@ always @(posedge clk)
 //	autofire is permanent active if enabled, can be overwritten any time by normal fire button
 assign _sjoy2[5:0] = joy2enable ? {_xjoy2[5], sel_autofire ^ _xjoy2[4], _xjoy2[3:0]} : 6'b11_1111;
 
-reg [12:0] joy_autorepeat;
-always @(posedge clk)
-begin
-  if( &_xjoy2 == 1) // all buttons released
-    joy_autorepeat <= 0;
-  else
-    if( &joy_autorepeat != 1) // not yet all bits set, can increment
-      joy_autorepeat <= joy_autorepeat+1;
-end
+localparam autorepeat_bits = 22; // defines key autorepeat delay
+localparam click_time = 65536; // defines key short-click time
+reg [autorepeat_bits-1:0] joy_autorepeat;
+reg joy_click = 0;
 
 // joystick single click gate
-assign joy_click = joy_autorepeat == 1 ? 1 : 0;
+// assign joy_click = joy_autorepeat != 0 && joy_autorepeat < 32 ? 1 : 0;
 // joystick hold gate
-assign joy_hold = &joy_autorepeat == 1 ? 1 : 0;
+assign joy_hold = joy_autorepeat[autorepeat_bits-1] == 1 ? 1 : 0;
+
+always @(posedge clk)
+begin
+  if(joy_autorepeat == 1)
+    joy_click <= 1;
+  if(joy_autorepeat == click_time)
+    joy_click <= 0;
+  if(&_xjoy2 == 1) // all buttons released
+    joy_autorepeat <= 0;
+  else
+    if(joy_hold == 0) // not yet all bits set, can increment
+      joy_autorepeat <= joy_autorepeat+1;
+end
 
 always @(joy2enable or _xjoy2 or osd_ctrl)
 	if (~joy2enable && (joy_click || joy_hold))
