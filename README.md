@@ -22,3 +22,12 @@ and other modules slightly adjusted to use new generic modules.
 
 There is a script which unzips original archive, removes
 unneed files and converts some binaries to generic vhdl.
+
+# SD browser menu
+
+Press all 4 cursor buttons together at the same time and
+Minimig menu will appear where you can browse SD card to
+load *.adf files and change Minimig emulation parameters.
+
+OSD menu is running on auxililary 68k CPU. It's source is here:
+[minimig_tc64](https://github.com/robinsonb5/minimig_tc64)
