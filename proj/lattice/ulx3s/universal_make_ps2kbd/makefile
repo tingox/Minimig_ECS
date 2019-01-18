@@ -1,0 +1,28 @@
+# ******* project, board and chip name *******
+PROJECT = f32c
+BOARD = ulx3s
+FPGA_SIZE = 85
+FPGA_PACKAGE = 6bg381c
+# config flash: 1:SPI (standard), 4:QSPI (quad)
+FLASH_SPI = 4
+# chip: is25lp032d is25lp128f s25fl164k
+FLASH_CHIP = is25lp128f
+
+# ******* design files *******
+# current boards v3.0.3 v2.1.2
+CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
+# first ULX3S prototypes v1.7 boards with patched ESP32 connection
+#CONSTRAINTS = ../../constraints/ulx3s_v17p.lpf
+
+# usually all toplevels have the same top module name
+TOP_MODULE = amiga_ulx3s
+
+# various toplevels for building different f32c soc's
+TOP_MODULE_FILE = ../../../../rtl_emard/lattice/ulx3s/top/amiga_ulx3s_ps2kbd.vhd
+
+include files.mk
+
+STRATEGY = ../../../../Minimig_ECS/Area2.sty
+
+SCRIPTS = ../../include/scripts
+include $(SCRIPTS)/ulx3s_diamond.mk
