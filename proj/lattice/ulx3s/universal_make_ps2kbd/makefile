@@ -21,7 +21,8 @@ TOP_MODULE = amiga_ulx3s
 
 include files.mk
 
-STRATEGY = ../../../../Minimig_ECS/Area2.sty
+#STRATEGY = ../../../../Minimig_ECS/Area2.sty
+STRATEGY = ../../../../Minimig_ECS/Minimig1.sty
 
 SCRIPTS = ../../include/scripts
 include $(SCRIPTS)/ulx3s_diamond.mk

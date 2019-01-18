@@ -2,7 +2,7 @@
 PROJECT = minimig
 BOARD = ulx3s
 # 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 25
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
 FLASH_SPI = 4
@@ -15,7 +15,8 @@ CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
 # first ULX3S prototypes v1.7 boards with patched ESP32 connection
 #CONSTRAINTS = ../../constraints/ulx3s_v17p.lpf
 
-STRATEGY = ../../../../Minimig_ECS/Area2.sty
+#STRATEGY = ../../../../Minimig_ECS/Area2.sty
+STRATEGY = ../../../../Minimig_ECS/Minimig1.sty
 
 TOP_MODULE_FILE = ../../../../rtl_emard/lattice/ulx3s/top/amiga_ulx3s.vhd
 # usually all toplevels have the same top module name
