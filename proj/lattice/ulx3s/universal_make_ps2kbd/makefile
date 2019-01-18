@@ -1,6 +1,7 @@
 # ******* project, board and chip name *******
-PROJECT = f32c
+PROJECT = minimig
 BOARD = ulx3s
+# 25 45 85
 FPGA_SIZE = 85
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
@@ -14,11 +15,9 @@ CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
 # first ULX3S prototypes v1.7 boards with patched ESP32 connection
 #CONSTRAINTS = ../../constraints/ulx3s_v17p.lpf
 
+TOP_MODULE_FILE = ../../../../rtl_emard/lattice/ulx3s/top/amiga_ulx3s_ps2kbd.vhd
 # usually all toplevels have the same top module name
 TOP_MODULE = amiga_ulx3s
-
-# various toplevels for building different f32c soc's
-TOP_MODULE_FILE = ../../../../rtl_emard/lattice/ulx3s/top/amiga_ulx3s_ps2kbd.vhd
 
 include files.mk
 
