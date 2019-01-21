@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = minimig
+PROJECT = minimig_usbjoy
 BOARD = ulx3s
 # 25 45 85
 FPGA_SIZE = 25

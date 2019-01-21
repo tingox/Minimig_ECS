@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = minimig
+PROJECT = minimig_ps2kbd
 BOARD = ulx3s
 # 25 45 85
 FPGA_SIZE = 25
