@@ -18,7 +18,7 @@ CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
 #STRATEGY = ../../../../Minimig_ECS/Area2.sty
 STRATEGY = ../../../../Minimig_ECS/Minimig1.sty
 
-TOP_MODULE_FILE = ../../../../rtl_emard/lattice/ulx3s/top/amiga_ulx3s.vhd
+TOP_MODULE_FILE = ../../../../rtl_emard/lattice/ulx3s/top/amiga_ulx3s_usbjoy.vhd
 # usually all toplevels have the same top module name
 TOP_MODULE = amiga_ulx3s
 
