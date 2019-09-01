@@ -1,7 +1,6 @@
 VHDL_FILES = $(TOP_MODULE_FILE) \
-../../../../rtl_emard/lattice/ulx3s/clocks/clk_25M_112M5_140Mp_140Mn_7M5.vhd \
-../../../../rtl_emard/lattice/ulx3s/clocks/C64_Clock.vhd \
-../../../../rtl_emard/lattice/ulx3s/clocks/DVI_PLL.vhd \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME)_vhdl.vhd \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME)_vhdl.vhd \
 ../../../../Minimig_ECS/impl1/source/Fampiga.vhd \
 ../../../../source_emard/cfide.vhd \
 ../../../../Minimig_ECS/impl1/source/Debounce.vhd \
@@ -31,12 +30,18 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/usbhid/usb_enum_saitek_minimal_pack.vhd \
 ../../../../rtl_emard/usbhid/usbhid_report_decoder_saitek.vhd \
 ../../../../rtl_emard/usbhid/report_decoded_pack_saitek.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_host_hid.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_setup_logitech_mouse_pack.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_report_decoder_logitech_mouse.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_sie_vhdl.vhd \
 ../../../../rtl_emard/spdif/spdif_tx.vhd \
 ../../../../rtl_emard/osd/char_rom.vhd \
 ../../../../rtl_emard/generic/bram_true2p_1clk.vhd \
 
 
 VERILOG_FILES = \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME).v \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME).v \
 ../../../../Minimig_ECS/impl1/source/Agnus.v \
 ../../../../Minimig_ECS/impl1/source/Amber.v \
 ../../../../Minimig_ECS/impl1/source/Audio.v \
@@ -56,3 +61,6 @@ VERILOG_FILES = \
 ../../../../source_emard/twowaycache.v \
 ../../../../Minimig_ECS/impl1/source/Sprites.v \
 ../../../../source_emard/Userio.v \
+../../../../rtl_emard/usb/usbhost/usbh_sie.v \
+../../../../rtl_emard/usb/usbhost/usbh_crc5.v \
+../../../../rtl_emard/usb/usbhost/usbh_crc16.v \
