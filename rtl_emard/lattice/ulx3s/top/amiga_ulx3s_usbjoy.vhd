@@ -17,6 +17,7 @@ use work.report_decoded_pack.all;
 entity amiga_ulx3s is
 generic
 (
+  C_programn: boolean := false; -- hold BTN0 to pull PROGRAMN low
   C_flea_av: boolean := false; -- use original flea's hdmi audio/video, false: use emard's audio/video
   C_flea_hdmi_audio: boolean := false -- great for digital TV's but incompatible for most PC monitors
 );
@@ -66,6 +67,9 @@ port
 
   -- SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
   shutdown: out std_logic := '0';
+  
+  -- PROGRAMN if pulled down, skip to multiboot from SPI flash
+  user_programn: out std_logic := '1';
 
   -- Audio jack 3.5mm
   audio_l, audio_r, audio_v: inout std_logic_vector(3 downto 0) := (others => 'Z');
@@ -136,7 +140,7 @@ architecture struct of amiga_ulx3s is
 
 	signal clk  : std_logic := '0';	
 	signal clk7m  : std_logic := '0';
-	signal clk7m5  : std_logic := '0';
+	signal clk6m  : std_logic := '0';
 	signal clk28m  : std_logic := '0';   
 
  
@@ -223,7 +227,8 @@ architecture struct of amiga_ulx3s is
 	signal S_hid_report: std_logic_vector(63 downto 0);
         signal S_report_decoded: T_report_decoded;
 	-- end emard usb hid joystick
-
+	
+	signal R_program: std_logic_vector(26 downto 0);
 begin
   wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
   led(0) <= btn(0); -- visual indication of btn press
@@ -232,7 +237,26 @@ begin
   s_hid_reset <= not btn(0);
   sd_dat1_irq <= '1';
   sd_dat2 <= '1';
+  
+  G_yes_programn: if C_programn generate
+  -- exit this FPGA core by pulling programn
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if btn(0) = '0' then
+        R_program <= R_program + 1; -- BTN0 pressed
+      else
+        R_program <= (others => '0'); -- BTN0 released
+      end if;
+    end if;
+  end process;
+  user_programn <= not R_program(R_program'high); -- high bit is delayed after keyperss
+  end generate;
 
+  G_not_programn: if not C_programn generate
+  user_programn <= '1';
+  end generate;
+  
 	-- Housekeeping logic for unwanted peripherals on FleaFPGA Ohm board goes here..
 	-- (Note: comment out any of the following code lines if peripheral is required)
 
@@ -240,7 +264,7 @@ begin
   usbhid_host_inst: entity usbhid_host
   port map
   (
-    clk => clk7m5, -- 7.5 MHz for low-speed USB1.0 device or 60 MHz for full-speed USB1.1 device
+    clk => clk6m, -- 7.5 MHz for low-speed USB1.0 device or 60 MHz for full-speed USB1.1 device
     reset => S_hid_reset,
     usb_data(1) => usb_fpga_dp,
     usb_data(0) => usb_fpga_dn,
@@ -257,15 +281,15 @@ begin
   )
   port map
   (
-    clk => clk7M5,
+    clk => clk6m,
     hid_report => S_hid_report,
     decoded => S_report_decoded
   );
   end generate;
 
-  process(clk7m5)
+  process(clk6m)
   begin
-    if rising_edge(clk7m5) then
+    if rising_edge(clk6m) then
       -- Joystick1 port used as mouse (right stick)
       n_joy1(5) <= not (          S_report_decoded.btn_start);  -- fire2
       n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rstick); -- fire
@@ -303,52 +327,25 @@ begin
 	ps2m_clk_in<=PS2_clk2;
 	PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
   
-	-- User HDL project modules and port mappings go here..
-
-	orig_clocks: if false generate
-	u0 : entity work.C64_clock
+	clk0 : entity work.clk_minimig_vhdl
 	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	clk,
-		
-		CLKOS			=>	sdram_clk,
-		CLKOS2			=>	clk28m,
-		CLKOS3			=>	clk7m,
-		LOCK			=>  pll_locked
+		clkin			=>	sys_clock,
+		clk_140			=>	clk_dvi,
+		clk_112			=>	clk,
+		clk_28			=>	clk28m,
+		clk_7			=>	clk7m,
+		locked			=>  pll_locked
 		);  
 		
-	u01 : entity work.DVI_PLL -- 
+	clk1 : entity work.clk_ramusb_vhdl
 	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	open, -- 112.5MHz
-		CLKOS			=>	clk_dvi, -- 140.625 MHz
-		CLKOS2			=>	clk_dvin -- 140.625 MHz
+		clkin			=>	sys_clock,
+		clk_112			=>	open,       -- 112.5MHz
+		clk_112_120deg		=>	sdram_clk,  -- 112.5 MHz 120 deg
+		clk_6			=>	clk6m       -- 6.05 MHz (ideally 6.00)
 		);
-        end generate;
 
-	usb_clocks: if true generate
-	u0 : entity work.C64_clock
-	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	clk,
-		
-		CLKOS			=>	sdram_clk,
-		CLKOS2			=>	clk28m,
-		CLKOS3			=>	clk7m,
-		LOCK			=>  pll_locked
-		);  
-		
-	u01 : entity work.clk_25M_112M5_140Mp_140Mn_7M5
-	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	open,     -- 112.5MHz
-		CLKOS			=>	clk_dvi,  -- 140.625 MHz
-		CLKOS2			=>	clk_dvin, -- 140.625 MHz
-		CLKOS3			=>	clk7m5    --   7.5   MHz (USB)
-		);
-        end generate;
-
-reset_combo1 <=	sys_reset and pll_locked;
+        reset_combo1 <=	sys_reset and pll_locked;
 		
 	u10 : entity work.poweronreset
 		port map( 

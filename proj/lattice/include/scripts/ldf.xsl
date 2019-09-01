@@ -5,10 +5,12 @@
 <xsl:param name="FPGA_DEVICE"/>
 <xsl:param name="CONSTRAINTS_FILE"/>
 <xsl:param name="STRATEGY_FILE"/>
+<xsl:param name="XCF_FILE"/>
 <xsl:param name="TOP_MODULE"/>
 <xsl:param name="TOP_MODULE_FILE"/>
 <xsl:param name="VERILOG_FILES"/>
 <xsl:param name="VHDL_FILES"/>
+<xsl:param name="SBX_FILES"/>
 <xsl:template match="node()|@*">
   <xsl:copy>
     <xsl:apply-templates select="node()|@*"/>
@@ -35,6 +37,11 @@
     <xsl:value-of select="$CONSTRAINTS_FILE"/>
   </xsl:attribute>
 </xsl:template>
+<xsl:template match="BaliProject/Implementation/Source[@type_short='Programming']/@name">
+  <xsl:attribute name="name">
+    <xsl:value-of select="$XCF_FILE"/>
+  </xsl:attribute>
+</xsl:template>
 <xsl:template match="BaliProject/Strategy/@file">
   <xsl:attribute name="file">
     <xsl:value-of select="$STRATEGY_FILE"/>
@@ -52,6 +59,10 @@
   <xsl:call-template name="tokenize">
     <xsl:with-param name="string" select="normalize-space($VERILOG_FILES)"/>
     <xsl:with-param name="type" select="'Verilog'"/>
+  </xsl:call-template>
+  <xsl:call-template name="tokenize">
+    <xsl:with-param name="string" select="normalize-space($SBX_FILES)"/>
+    <xsl:with-param name="type" select="'sbx'"/>
   </xsl:call-template>
 </xsl:template>
 

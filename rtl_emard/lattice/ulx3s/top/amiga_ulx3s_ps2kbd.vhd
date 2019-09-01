@@ -136,7 +136,7 @@ architecture struct of amiga_ulx3s is
 
 	signal clk  : std_logic := '0';	
 	signal clk7m  : std_logic := '0';
-	signal clk7m5  : std_logic := '0';
+	signal clk6m  : std_logic := '0';
 	signal clk28m  : std_logic := '0';   
 
  
@@ -240,7 +240,7 @@ begin
   usbhid_host_inst: entity usbhid_host
   port map
   (
-    clk => clk7m5, -- 7.5 MHz for low-speed USB1.0 device or 60 MHz for full-speed USB1.1 device
+    clk => clk6m, -- 7.5 MHz for low-speed USB1.0 device or 60 MHz for full-speed USB1.1 device
     reset => S_hid_reset,
     usb_data(1) => usb_fpga_dp,
     usb_data(0) => usb_fpga_dn,
@@ -257,14 +257,14 @@ begin
   )
   port map
   (
-    clk => clk7M5,
+    clk => clk6m,
     hid_report => S_hid_report,
     decoded => S_report_decoded
   );
 
-  process(clk7m5)
+  process(clk6m)
   begin
-    if rising_edge(clk7m5) then
+    if rising_edge(clk6m) then
       -- Joystick1 port used as mouse (right stick)
       n_joy1(5) <= not (          S_report_decoded.btn_start);  -- fire2
       n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rstick); -- fire
@@ -327,11 +327,13 @@ begin
 		CLKI			=>	sys_clock,
 		CLKOP			=>	clk,
 		
-		CLKOS			=>	sdram_clk,
+		CLKOS			=>	open, -- sdram_clk,
 		CLKOS2			=>	clk28m,
 		CLKOS3			=>	clk7m,
 		LOCK			=>  pll_locked
 		);  
+
+        sdram_clk <= not clk;
 		
 	u01 : entity work.DVI_PLL -- 
 	port map(
@@ -343,24 +345,24 @@ begin
         end generate;
 
 	usb_clocks: if true generate
-	u0 : entity work.C64_clock
+	u0 : entity work.clk_minimig_vhdl
 	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	clk,
-		
-		CLKOS			=>	sdram_clk,
-		CLKOS2			=>	clk28m,
-		CLKOS3			=>	clk7m,
-		LOCK			=>  pll_locked
+		clkin			=>	sys_clock, --  25       MHz
+		clkout0			=>	clk,       -- 112.5     MHz
+		clkout1			=>	sdram_clk, -- 112.5     MHz phase 144 deg
+		clkout2			=>	clk28m,    --  28.125   MHz CPUx4 video
+		clkout3			=>	clk7m,     --   7.03125 MHz CPU
+		locked			=>  pll_locked
 		);  
 		
-	u01 : entity work.clk_25M_112M5_140Mp_140Mn_7M5
+	u01 : entity work.clk_video_vhdl
 	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	open,     -- 112.5MHz
-		CLKOS			=>	clk_dvi,  -- 140.625 MHz
-		CLKOS2			=>	clk_dvin, -- 140.625 MHz
-		CLKOS3			=>	clk7m5    --   7.5   MHz (USB)
+		clkin			=>	sys_clock, --  25     MHz
+		clkout0			=>	open,      -- 112.5   MHz
+		clkout1			=>	clk_dvi,   -- 140.625 MHz DVI
+		clkout2			=>	open,      -- 112.5   MHz phase 144 deg
+		clkout3			=>	clk6m,     --   6.05  MHz (USB)
+		locked                  =>      open
 		);
         end generate;
 

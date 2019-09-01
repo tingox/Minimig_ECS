@@ -1,4 +1,6 @@
 VHDL_FILES = $(TOP_MODULE_FILE) \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME)_vhdl.vhd \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME)_vhdl.vhd \
 ../../../../rtl_emard/lattice/ulx3s/clocks/clk_25M_112M5_140Mp_140Mn_7M5.vhd \
 ../../../../rtl_emard/lattice/ulx3s/clocks/C64_Clock.vhd \
 ../../../../rtl_emard/lattice/ulx3s/clocks/DVI_PLL.vhd \
@@ -37,7 +39,10 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/vga/hdmi/tmds_encoder.vhd \
 ../../../../rtl_emard/vga/hdmi/ddr_dvid_out_se.vhd \
 
+
 VERILOG_FILES = \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME).v \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME).v \
 ../../../../Minimig_ECS/impl1/source/Agnus.v \
 ../../../../Minimig_ECS/impl1/source/Amber.v \
 ../../../../Minimig_ECS/impl1/source/Audio.v \
