@@ -85,7 +85,9 @@ port
   gpdi_scl, gpdi_sda: inout std_logic;
 
   -- US2 port
-  usb_fpga_dp, usb_fpga_dn: inout std_logic;
+  usb_fpga_dp: in std_logic;
+  usb_fpga_bd_dp, usb_fpga_bd_dn: inout std_logic;
+  usb_fpga_pu_dp, usb_fpga_pu_dn: out std_logic;
 
   -- Flash ROM (SPI0)
   -- commented out because it can't be used as GPIO
@@ -269,11 +271,13 @@ begin
     clk => clk6m, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
     bus_reset => S_hid_reset,
     usb_dif => usb_fpga_dp,
-    usb_dp => usb_fpga_dp,
-    usb_dn => usb_fpga_dn,
+    usb_dp => usb_fpga_bd_dp,
+    usb_dn => usb_fpga_bd_dn,
     hid_report => S_hid_report,
     hid_valid => S_hid_valid
   );
+  usb_fpga_pu_dp <= '0';
+  usb_fpga_pu_dn <= '0';
 
   usbhid_report_decoder_inst: entity usbhid_report_decoder
   generic map
