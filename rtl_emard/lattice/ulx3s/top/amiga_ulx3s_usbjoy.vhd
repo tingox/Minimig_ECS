@@ -225,6 +225,7 @@ architecture struct of amiga_ulx3s is
 	-- emard usb hid joystick
 	signal S_hid_reset: std_logic;
 	signal S_hid_report: std_logic_vector(63 downto 0);
+	signal S_hid_valid: std_logic;
         signal S_report_decoded: T_report_decoded;
 	-- end emard usb hid joystick
 	
@@ -257,19 +258,21 @@ begin
   user_programn <= '1';
   end generate;
   
-	-- Housekeeping logic for unwanted peripherals on FleaFPGA Ohm board goes here..
-	-- (Note: comment out any of the following code lines if peripheral is required)
-
   G_usb_hid: if true generate
-  usbhid_host_inst: entity usbhid_host
+  usbhid_host_inst: entity usbh_host_hid
+  generic map
+  (
+    C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
+  )
   port map
   (
-    clk => clk6m, -- 7.5 MHz for low-speed USB1.0 device or 60 MHz for full-speed USB1.1 device
-    reset => S_hid_reset,
-    usb_data(1) => usb_fpga_dp,
-    usb_data(0) => usb_fpga_dn,
+    clk => clk6m, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+    bus_reset => S_hid_reset,
+    usb_dif => usb_fpga_dp,
+    usb_dp => usb_fpga_dp,
+    usb_dn => usb_fpga_dn,
     hid_report => S_hid_report,
-    leds => open -- debug
+    hid_valid => S_hid_valid
   );
 
   usbhid_report_decoder_inst: entity usbhid_report_decoder
@@ -283,6 +286,7 @@ begin
   (
     clk => clk6m,
     hid_report => S_hid_report,
+    hid_valid => S_hid_valid,
     decoded => S_report_decoded
   );
   end generate;
@@ -328,22 +332,24 @@ begin
 	PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
   
 	clk0 : entity work.clk_minimig_vhdl
-	port map(
+	port map
+	(
 		clkin			=>	sys_clock,
 		clk_140			=>	clk_dvi,
 		clk_112			=>	clk,
 		clk_28			=>	clk28m,
 		clk_7			=>	clk7m,
 		locked			=>  pll_locked
-		);  
-		
+        );
+
 	clk1 : entity work.clk_ramusb_vhdl
-	port map(
+	port map
+	(
 		clkin			=>	sys_clock,
-		clk_112			=>	open,       -- 112.5MHz
-		clk_112_120deg		=>	sdram_clk,  -- 112.5 MHz 120 deg
-		clk_6			=>	clk6m       -- 6.05 MHz (ideally 6.00)
-		);
+		clk_112			=>	open,
+		clk_112_120deg		=>	sdram_clk,
+		clk_6			=>	clk6m       --   6.05 MHz (ideally 6 MHz)
+        );
 
         reset_combo1 <=	sys_reset and pll_locked;
 		
