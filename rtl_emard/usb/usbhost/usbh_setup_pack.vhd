@@ -1,21 +1,44 @@
 -- (c) EMARD
 -- License=GPL
 
--- USB enumeration sequence sniffed with wireshark
--- For Logitech mouse and other similar USB low-speed HID devices.
+-- USB setup (enumeration) sequence
+-- for common USB low-speed HID devices.
+
+-- Works for:
+-- Mouse:    Logitech: M-BT58, LX3, RX250, Microsoft: IntelliMouse
+-- Keyboard: Logitech: NetPlay Y-UC29, Openhardware: V-USB
+-- Gamepad:  Saitek: P3600, Darfon
+
+-- Doesn't work for:
+-- Keyboard: Logitech: UltraX Y-BL49A
+
 -- After this minimal setup sequence is replayed to mouse,
 -- mouse will answer each IN transfer with HID report
 -- or with NAK if report data is not available.
 
 library ieee;
 use ieee.std_logic_1164.all;
+use IEEE.NUMERIC_STD.ALL;
 
 package usbh_setup_pack is
+
+  constant C_setup_retry       : integer := 4;  -- 2**n retries 3:8 setup retries and then detach
+  constant C_setup_interval    : integer := 17; -- 2**n clocks 15:5.46 ms wait before sending next setup request
+  constant C_report_interval   : integer := 16; -- 2**n clocks 15:5.46 ms wait before sending next request for report
+  constant C_report_endpoint   : integer := 1;  -- default=1 endpoint which answers IN transfer with HID report
+  constant C_report_length     : integer := 8;  -- report buffer length: 4:M-BT58, 5:LX3, 8:keyboard, 20:XBOX360
+
+  constant C_keepalive_setup   : std_logic := '1';  -- enable keepalive during setup
+  constant C_keepalive_status  : std_logic := '1';  -- enable keepalive during setup status OUT 0-length
+  constant C_keepalive_report  : std_logic := '1';  -- enable keepalive during report IN
+  constant C_keepalive_type    : std_logic := '1';  -- '0':SOF-packet '1':SE0-pulse
+  constant C_keepalive_phase   : std_logic_vector(11 downto 0) := x"FCC"; -- near the end of 0.68 ms interval x"FCC" is max what currently works
+
   type T_setup_rom is array(natural range <>) of std_logic_vector(7 downto 0);
   constant C_setup_rom: T_setup_rom :=
   (
     -- set configuration 1 --
-    x"00", x"09", x"01", x"00", x"00", x"00", x"00", x"00",
+--    x"00", x"09", x"01", x"00", x"00", x"00", x"00", x"00",
 -- HOST:  < SYNC ><SETUP ><ADR0>EP0 CRC5
 --  D+ ___-_-_-_---___--_-_-_-_-_-_-_--_-_____
 --  D- ---_-_-_-___---__-_-_-_-_-_-_-__-_-__--
@@ -26,7 +49,7 @@ package usbh_setup_pack is
 --  D+ ___-_-_-_--__-__---_____
 --  D- ---_-_-_-__--_--_____---
     -- set idle 0 --
-    x"21", x"0A", x"00", x"00", x"00", x"00", x"00", x"00"
+--    x"21", x"0A", x"00", x"00", x"00", x"00", x"00", x"00"
 -- HOST:  < SYNC ><SETUP ><ADR0>EP0 CRC5
 --  D+ ___-_-_-_---___--_-_-_-_-_-_-_--_-_____
 --  D- ---_-_-_-___---__-_-_-_-_-_-_-__-_-__--
@@ -47,13 +70,17 @@ package usbh_setup_pack is
 -- MOUSE: < SYNC >< ACK >
 --  D+ ___-_-_-_--__-__---_____
 --  D- ---_-_-_-__--_--_____---
+    -- set_address 1, Microsoft IntelliMouse needs address > 0 to activate reports --
+    x"00", x"05", x"01", x"00", x"00", x"00", x"00", x"00",
+    -- get_device_descriptor, requested length 0x12 = 18 bytes, no known device needs this --
+--    x"80", x"06", x"00", x"01", x"00", x"00", x"12", x"00",
+    -- set report request 0x200 with 1 byte data 0x00, no known device needs this --
+--    x"21", x"09", x"00", x"02", x"00", x"00", x"01", x"00", x"00",
+    -- set_configuration 1, most devices need configuration = 1 to activate reports --
+    x"00", x"09", x"01", x"00", x"00", x"00", x"00", x"00"
+    -- NOTE: last setup packet currently must be a non-data phase packet
+    -- like set configuration, there's a bug that skips data phase at last packet
   );
-  constant C_setup_retry       : integer := 3;  -- 2**n times retry setup and then detach
-  constant C_setup_interval    : integer := 17; -- 2**n clocks 17=21.85 ms wait before sending next setup request
-  constant C_report_interval   : integer := 15; -- 2**n clocks 15=5.46 ms wait before sending next request for report
-  constant C_report_endpoint   : integer := 1;  -- endpoint which answers IN transfer with HID report
-  constant C_report_length     : integer := 8;  -- report buffer length: 4 for M-BT58, 5 for LX3, 8 enough
-  constant C_device_address    : integer := 0;  -- default is 0 if set address is not used
 
 -- to generate this package:
 -- modprobe usbmon

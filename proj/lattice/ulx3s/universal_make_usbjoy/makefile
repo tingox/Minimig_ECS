@@ -29,6 +29,14 @@ CLK1_OPTIONS = \
   --clkout1_name=clk_112_120deg --clkout1=112.5 --phase1=120 \
   --clkout2_name=clk_6          --clkout2=6
 
+CLK2_NAME = clk_usb
+CLK2_FILE_NAME = ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME).v
+CLK2_OPTIONS = \
+  --module=$(CLK2_NAME) \
+  --clkin=25 \
+  --clkout0_name=clk_50          --clkout0=50 \
+  --clkout1_name=clk_6           --clkout1=6
+
 # ******* design files *******
 # current boards v3.0.3 v2.1.2
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf

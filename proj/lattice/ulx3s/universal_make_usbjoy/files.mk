@@ -1,6 +1,7 @@
 VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME)_vhdl.vhd \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME)_vhdl.vhd \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME)_vhdl.vhd \
 ../../../../Minimig_ECS/impl1/source/Fampiga.vhd \
 ../../../../source_emard/cfide.vhd \
 ../../../../Minimig_ECS/impl1/source/Debounce.vhd \
@@ -27,7 +28,7 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/vga/lattice/ecp5u/ddr_out_emard.vhd \
 ../../../../rtl_emard/usb/usbhid/usbhid_report_decoder_darfon.vhd \
 ../../../../rtl_emard/usb/usbhid/report_decoded_pack_generic.vhd \
-../../../../rtl_emard/usb/usbhost/usbh_setup_generic_pack.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_setup_pack.vhd \
 ../../../../rtl_emard/usb/usbhost/usbh_host_hid.vhd \
 ../../../../rtl_emard/usb/usbhost/usbh_sie_vhdl.vhd \
 ../../../../rtl_emard/usb/usb11_phy_vhdl/usb_phy.vhd \
@@ -41,6 +42,7 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 VERILOG_FILES = \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME).v \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME).v \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME).v \
 ../../../../Minimig_ECS/impl1/source/Agnus.v \
 ../../../../Minimig_ECS/impl1/source/Amber.v \
 ../../../../Minimig_ECS/impl1/source/Audio.v \

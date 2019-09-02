@@ -234,7 +234,7 @@ architecture struct of amiga_ulx3s is
 	signal R_program: std_logic_vector(26 downto 0);
 begin
   wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
-  led(0) <= btn(0); -- visual indication of btn press
+  --led(0) <= btn(0); -- visual indication of btn press
   -- btn(0) has inverted logic
   sys_reset <= btn(0);
   s_hid_reset <= not btn(0);
@@ -318,7 +318,12 @@ begin
     end if;
   end process;
 
-  led(6 downto 1) <= not n_joy2;
+  led(0) <= not n_joy2(0); -- red
+  led(3) <= not n_joy2(1); -- blue
+  led(2) <= not n_joy2(2); -- green
+  led(1) <= not n_joy2(3); -- orange
+  led(4) <= not n_joy2(4); -- red
+  led(5) <= not n_joy2(5); -- orange
 
   -- Video output horizontal scanrate select 15/30kHz select via GPIO header
   -- n_15khz <= GP(21) ; -- Default is 30kHz video out if pin left unconnected. Connect to GND for 15kHz video.
@@ -355,6 +360,13 @@ begin
 		clk_6			=>	clk6m       --   6.05 MHz (ideally 6 MHz)
         );
 
+--	clk2 : entity work.clk_usb_vhdl
+--	port map
+--	(
+--		clkin			=>	sys_clock,
+--		clk_6			=>	open       --   6.05 MHz (ideally 6 MHz)
+--	);
+
         reset_combo1 <=	sys_reset and pll_locked;
 		
 	u10 : entity work.poweronreset
@@ -372,10 +384,10 @@ led(7) <= not diskoff;
 
 myFampiga: entity work.Fampiga
 	port map(
-		clk=> 	clk,
-		clk7m=> clk7m,
-		clk28m=> clk28m,
-		reset_n=>reset_n,--GPIO_wordin(0),--reset_n,
+		clk     => clk,
+		clk7m   => clk7m,
+		clk28m  => clk28m,
+		reset_n => reset_n,--GPIO_wordin(0),--reset_n,
 		--powerled_out=>power_led(5 downto 4),
 		diskled_out=>diskoff,
 		--oddled_out=>odd_led(5), 
