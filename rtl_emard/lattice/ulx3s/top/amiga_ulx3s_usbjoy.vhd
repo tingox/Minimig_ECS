@@ -299,8 +299,8 @@ begin
   begin
     if rising_edge(clk6m) then
       -- Joystick1 port used as mouse (right stick)
-      n_joy1(5) <= not (          S_report_decoded.btn_start);  -- fire2
-      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rstick); -- fire
+      n_joy1(5) <= not (          S_report_decoded.btn_mouse_right);  -- fire2
+      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_mouse_left); -- fire
       n_joy1(3) <= not (S_report_decoded.rmouseq_y(0));       -- LSB quadrature y
       n_joy1(2) <= not (S_report_decoded.rmouseq_x(0));       -- LSB quadrature x
       n_joy1(1) <= not (S_report_decoded.rmouseq_y(1));       -- MSB quadrature y
@@ -325,40 +325,39 @@ begin
   led(4) <= not n_joy2(4); -- red
   led(5) <= not n_joy2(5); -- orange
 
-  -- Video output horizontal scanrate select 15/30kHz select via GPIO header
-  -- n_15khz <= GP(21) ; -- Default is 30kHz video out if pin left unconnected. Connect to GND for 15kHz video.
-  n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
+  -- Video output horizontal scanrate select 15/30kHz select
+  n_15khz <= '1'; -- sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
 
   -- PS/2 Keyboard and Mouse definitions
-	ps2k_dat_in<=PS2_data1;
-	PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
-	ps2k_clk_in<=PS2_clk1;
-	PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
+  ps2k_dat_in<=PS2_data1;
+  PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
+  ps2k_clk_in<=PS2_clk1;
+  PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
  
-	ps2m_dat_in<=PS2_data2;
-	PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
-	ps2m_clk_in<=PS2_clk2;
-	PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
+  ps2m_dat_in<=PS2_data2;
+  PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
+  ps2m_clk_in<=PS2_clk2;
+  PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
   
-	clk0 : entity work.clk_minimig_vhdl
-	port map
-	(
+  clk0 : entity work.clk_minimig_vhdl
+  port map
+  (
 		clkin			=>	sys_clock,
 		clk_140			=>	clk_dvi,
 		clk_112			=>	clk,
 		clk_28			=>	clk28m,
 		clk_7			=>	clk7m,
 		locked			=>  pll_locked
-        );
+  );
 
-	clk1 : entity work.clk_ramusb_vhdl
-	port map
-	(
+  clk1 : entity work.clk_ramusb_vhdl
+  port map
+  (
 		clkin			=>	sys_clock,
 		clk_112			=>	open,
 		clk_112_120deg		=>	sdram_clk,
 		clk_6			=>	clk6m       --   6.05 MHz (ideally 6 MHz)
-        );
+  );
 
 --	clk2 : entity work.clk_usb_vhdl
 --	port map
@@ -367,23 +366,19 @@ begin
 --		clk_6			=>	open       --   6.05 MHz (ideally 6 MHz)
 --	);
 
-        reset_combo1 <=	sys_reset and pll_locked;
+  reset_combo1 <=	sys_reset and pll_locked;
 		
-	u10 : entity work.poweronreset
-		port map( 
-			clk => clk,
-			reset_button => reset_combo1,
-			reset_out => reset_n
-			--power_button => power_button,
-			--power_hold => power_hold		
-		);		
+  u10 : entity work.poweronreset
+  port map( 
+    clk => clk,
+    reset_button => reset_combo1,
+    reset_out => reset_n
+  );		
 		
+  led(7) <= not diskoff;
 
-		
-led(7) <= not diskoff;
-
-myFampiga: entity work.Fampiga
-	port map(
+  myFampiga: entity work.Fampiga
+  port map(
 		clk     => clk,
 		clk7m   => clk7m,
 		clk28m  => clk28m,
@@ -445,114 +440,9 @@ myFampiga: entity work.Fampiga
 		sd_miso => mmc_miso,
 		sd_mosi => mmc_mosi,
 		sd_clk => mmc_clk
-	);
+  );
 
-flea_video: if C_flea_av generate
--- Audio output mapped to 3.5mm jack
-audio_r(1 downto 0) <= (others => DAC_R);
-audio_l(1 downto 0) <= (others => DAC_L);
-process(clk28m)
-begin
-  if rising_edge(clk28m) then
-	red <= std_logic_vector(red_u) & "0000";
-	green <= std_logic_vector(green_u) & "0000";
-	blue <= std_logic_vector(blue_u) & "0000";  
-	--blank <= hsync AND vsync;
-	blank <= videoblank;	
-	dvi_hsync <= hsync;
-	dvi_vsync <= vsync;
-  end if;
-end process;    
-
-  left_sampled <= leftdatasum(14 downto 0) & '0';
-  right_sampled <= rightdatasum(14 downto 0) & '0';
-	
-  Inst_DVI: entity work.dvid 
-  --GENERIC MAP (
-  --  Invert_Red => true,
-  --  Invert_Green => true,
-  --  Invert_Blue => true,
-  --  Invert_Clock => true
-  --)
-  PORT MAP (
-    clk		  => clk_dvi,
-    clk_n         => clk_dvin,	 
-    clk_pixel     => clk28m,
-    clk_pixel_en  => true, 
-	
-    red_p         => red,
-    green_p       => green,
-    blue_p        => blue,
-    blank         => blank,
-    hsync         => dvi_hsync, 
-    vsync         => dvi_vsync,
-	EnhancedMode  => C_flea_hdmi_audio,
-	IsProgressive  => true, 
-	IsPAL  		  => true, 
-	Is30kHz  	  => true,
-	Limited_Range  => false,
-	Widescreen    => true,
-	HDMI_audio_L  => left_sampled,
-	HDMI_audio_R  => right_sampled,
-	HDMI_LeftEnable  => l_audio_ena,
-	HDMI_RightEnable => l_audio_ena,
-    dvid_red      => dvid_red,
-    dvid_green    => dvid_green,
-    dvid_blue     => dvid_blue,
-    dvid_clock    => dvid_clock,
-    red_s         => LVDS_Red,
-    green_s       => LVDS_Green, 
-    blue_s        => LVDS_Blue,
-    clock_s       => LVDS_ck
-  ); 
-  
-process(clk28m)
-begin
-  if rising_edge(clk28m) then
-    if cnt=cnt_div-1 then
-      ce  <= '1';
-      cnt <= 0; 
-    else
-      ce  <= '0';
-      cnt <= cnt +1 ;
-    end if;
-  end if;
-end process;
-process(clk28m)
-begin
-  if rising_edge(clk28m) then
-	if ce='1' then
-	   l_audio_ena <= true;
-	else
-	   l_audio_ena <= false;
-    end if;
-  end if;
-end process;
-
-  -- vendor specific DDR modules
-  -- convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
-  flea_ddr_red:   ODDRX1F port map (D0=>dvid_red(0),   D1=>dvid_red(1),   Q=>ddr_d(2), SCLK=>clk_pixel_shift, RST=>'0');
-  flea_ddr_green: ODDRX1F port map (D0=>dvid_green(0), D1=>dvid_green(1), Q=>ddr_d(1), SCLK=>clk_pixel_shift, RST=>'0');
-  flea_ddr_blue:  ODDRX1F port map (D0=>dvid_blue(0),  D1=>dvid_blue(1),  Q=>ddr_d(0), SCLK=>clk_pixel_shift, RST=>'0');
-  flea_ddr_clock: ODDRX1F port map (D0=>dvid_clock(0), D1=>dvid_clock(1), Q=>ddr_clk,  SCLK=>clk_pixel_shift, RST=>'0');
-  flea_gpdi_data_channels: for i in 0 to 2 generate
-    flea_gpdi_diff_data: OLVDS
-    port map(A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
-  end generate;
-  flea_gpdi_diff_clock: OLVDS
-  port map(A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
-
---gpdi_dp(2) <= LVDS_Red(0);
---gpdi_dn(2) <= not LVDS_Red(0);
---gpdi_dp(1) <= LVDS_Green(0);
---gpdi_dn(1) <= not LVDS_Green(0);
---gpdi_dp(0) <= LVDS_Blue(0);
---gpdi_dn(0) <= not LVDS_Blue(0);
---gpdi_clkp <= LVDS_ck(0);
---gpdi_clkn <= not LVDS_ck(0);
-end generate;
-
-emard_video: if not C_flea_av generate
+  emard_video: if not C_flea_av generate
   S_audio(23 downto 9) <= leftdatasum(14 downto 0);
   G_spdif_out: entity work.spdif_tx
   generic map
@@ -569,7 +459,6 @@ emard_video: if not C_flea_av generate
   audio_l(3 downto 0) <= leftdatasum(14 downto 11);
   audio_r(3 downto 0) <= rightdatasum(14 downto 11);
   audio_v(1 downto 0) <= (others => S_spdif_out);
-
 
   vga2dvi_converter: entity work.vga2dvid
   generic map
@@ -609,6 +498,6 @@ emard_video: if not C_flea_av generate
   end generate;
   gpdi_diff_clock: OLVDS port map (A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
 
-end generate;
+  end generate; -- emard video
 
 end struct;

@@ -19,5 +19,6 @@ record
   btn_back, btn_start: std_logic;
   btn_lstick, btn_rstick: std_logic;
   btn_fps, btn_fps_toggle: std_logic;
+  btn_mouse_left, btn_mouse_right: std_logic;
 end record;
 end;

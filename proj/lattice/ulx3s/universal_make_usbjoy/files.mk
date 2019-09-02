@@ -5,7 +5,6 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../Minimig_ECS/impl1/source/Fampiga.vhd \
 ../../../../source_emard/cfide.vhd \
 ../../../../Minimig_ECS/impl1/source/Debounce.vhd \
-../../../../Minimig_ECS/RTL/sdram_cache.vhd \
 ../../../../Minimig_ECS/impl1/source/TG68K.vhd \
 ../../../../Minimig_ECS/impl1/source/TG68K_ALU.vhd \
 ../../../../Minimig_ECS/impl1/source/TG68K_Pack.vhd \
@@ -26,7 +25,7 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/vga/hdmi/vga2dvid.vhd \
 ../../../../rtl_emard/vga/hdmi/tmds_encoder.vhd \
 ../../../../rtl_emard/vga/lattice/ecp5u/ddr_out_emard.vhd \
-../../../../rtl_emard/usb/usbhid/usbhid_report_decoder_darfon.vhd \
+../../../../rtl_emard/usb/usbhid/usbhid_report_decoder_logitech_mouse.vhd \
 ../../../../rtl_emard/usb/usbhid/report_decoded_pack_generic.vhd \
 ../../../../rtl_emard/usb/usbhost/usbh_setup_pack.vhd \
 ../../../../rtl_emard/usb/usbhost/usbh_host_hid.vhd \
@@ -37,7 +36,11 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/spdif/spdif_tx.vhd \
 ../../../../rtl_emard/osd/char_rom.vhd \
 ../../../../rtl_emard/generic/bram_true2p_1clk.vhd \
+../../../../rtl_emard/sdram/sdram.vhd \
 
+# sdram controllers
+# ../../../../rtl_emard/sdram/sdram.vhd \
+# ../../../../Minimig_ECS/RTL/sdram_cache.vhd \
 
 VERILOG_FILES = \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME).v \
