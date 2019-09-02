@@ -59,11 +59,7 @@ architecture rtl of usbhid_report_decoder is
   alias S_mouse_rel_x: std_logic_vector(7 downto 0) is R_hid_report(15 downto 8);
   alias S_mouse_rel_y: std_logic_vector(7 downto 0) is R_hid_report(23 downto 16);
   alias S_mouse_rel_z: std_logic_vector(7 downto 0) is R_hid_report(31 downto 24);
-  -- mouse rel movements
-  signal R_lmousecx: std_logic_vector(7 downto 0);
-  signal R_lmousecy: std_logic_vector(7 downto 0);
-  signal R_rmousecx: std_logic_vector(7 downto 0);
-  signal R_rmousecy: std_logic_vector(7 downto 0);
+  signal R_rarify_mouse: std_logic_vector(11 downto 0);
 begin
   yes_reg_input: if C_reg_input generate
   process(clk) is
@@ -98,21 +94,58 @@ begin
   decoded.btn_fps <= S_btn_fps;
   decoded.btn_fps_toggle <= S_btn_fps_toggle;
 
-  decoded.btn_mouse_left <= S_mouse_btn_left;
-  decoded.btn_mouse_right <= S_mouse_btn_right;
+
+  process(clk)
+  begin
+      if rising_edge(clk) then
+        if R_rarify_mouse(R_rarify_mouse'high) = '0' then
+          R_rarify_mouse <= R_rarify_mouse + 1;
+        else
+          R_rarify_mouse <= (others => '0');
+        end if;
+      end if;
+  end process;
 
   yes_lmouse: if C_lmouse generate
+  B_lmouse: block
+    signal R_lmousecx: std_logic_vector(7 downto 0);
+    signal R_lmousecy: std_logic_vector(7 downto 0);
+    signal R_tlmousecx: std_logic_vector(7 downto 0);
+    signal R_tlmousecy: std_logic_vector(7 downto 0);
+    signal S_dlmousecx: std_logic_vector(7 downto 0);
+    signal S_dlmousecy: std_logic_vector(7 downto 0);
+  begin
+  S_dlmousecx <= R_tlmousecx - R_lmousecx;
+  S_dlmousecy <= R_tlmousecy - R_lmousecy;
   -- mouse counters
   process(clk)
   begin
       if rising_edge(clk) then
         if R_hid_valid = '1' then
-          R_lmousecx <= R_lmousecx + S_mouse_rel_x;
-          R_lmousecy <= R_lmousecy + S_mouse_rel_y;
+          R_tlmousecx <= R_tlmousecx + S_mouse_rel_x;
+          R_tlmousecy <= R_tlmousecy + S_mouse_rel_y;
+        end if;
+        if R_rarify_mouse(R_rarify_mouse'high) = '1' then
+          if S_dlmousecx /= x"00" then
+            if S_dlmousecx(S_dlmousecx'high) = '1' then
+              R_lmousecx <= R_lmousecx - 1;
+            else
+              R_lmousecx <= R_lmousecx + 1;
+            end if;
+          end if;
+          if S_dlmousecy /= x"00" then
+            if S_dlmousecy(S_dlmousecy'high) = '1' then
+              R_lmousecy <= R_lmousecy - 1;
+            else
+              R_lmousecy <= R_lmousecy + 1;
+            end if;
+          end if;
         end if;
       end if;
   end process;
 
+  decoded.btn_lmouse_left  <= S_mouse_btn_left;
+  decoded.btn_lmouse_right <= S_mouse_btn_right;
   -- mouse quadrature encoders
   decoded.lmouseq_x  <= "01" when R_lmousecx(1 downto 0) = "00" else
                         "11" when R_lmousecx(1 downto 0) = "01" else
@@ -122,20 +155,49 @@ begin
                         "11" when R_lmousecy(1 downto 0) = "01" else
                         "10" when R_lmousecy(1 downto 0) = "10" else
                         "00"; -- when "11"
+  end block;
   end generate;
 
   yes_rmouse: if C_rmouse generate
+  B_rmouse: block
+    signal R_rmousecx: std_logic_vector(7 downto 0);
+    signal R_rmousecy: std_logic_vector(7 downto 0);
+    signal R_trmousecx: std_logic_vector(7 downto 0);
+    signal R_trmousecy: std_logic_vector(7 downto 0);
+    signal S_drmousecx: std_logic_vector(7 downto 0);
+    signal S_drmousecy: std_logic_vector(7 downto 0);
+  begin
+  S_drmousecx <= R_trmousecx - R_rmousecx;
+  S_drmousecy <= R_trmousecy - R_rmousecy;
   -- mouse counters
   process(clk)
   begin
       if rising_edge(clk) then
         if R_hid_valid = '1' then
-          R_rmousecx <= R_rmousecx + S_mouse_rel_x;
-          R_rmousecy <= R_rmousecy + S_mouse_rel_y;
+          R_trmousecx <= R_trmousecx + S_mouse_rel_x;
+          R_trmousecy <= R_trmousecy + S_mouse_rel_y;
+        end if;
+        if R_rarify_mouse(R_rarify_mouse'high) = '1' then
+          if S_drmousecx /= x"00" then
+            if S_drmousecx(S_drmousecx'high) = '1' then
+              R_rmousecx <= R_rmousecx - 1;
+            else
+              R_rmousecx <= R_rmousecx + 1;
+            end if;
+          end if;
+          if S_drmousecy /= x"00" then
+            if S_drmousecy(S_drmousecy'high) = '1' then
+              R_rmousecy <= R_rmousecy - 1;
+            else
+              R_rmousecy <= R_rmousecy + 1;
+            end if;
+          end if;
         end if;
       end if;
   end process;
 
+  decoded.btn_rmouse_left  <= S_mouse_btn_left;
+  decoded.btn_rmouse_right <= S_mouse_btn_right;
   -- mouse quadrature encoders
   decoded.rmouseq_x  <= "01" when R_rmousecx(1 downto 0) = "00" else
                         "11" when R_rmousecx(1 downto 0) = "01" else
@@ -145,6 +207,7 @@ begin
                         "11" when R_rmousecy(1 downto 0) = "01" else
                         "10" when R_rmousecy(1 downto 0) = "10" else
                         "00"; -- when "11"
+  end block;
   end generate;
   
 end rtl;

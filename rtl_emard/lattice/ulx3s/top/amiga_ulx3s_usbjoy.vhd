@@ -13,6 +13,7 @@ use ecp5u.components.all;
 
 -- package for usb joystick report decoded structure
 use work.report_decoded_pack.all;
+use work.usbh_setup_pack.all;
 
 entity amiga_ulx3s is
 generic
@@ -105,6 +106,7 @@ port
 end;
 
 architecture struct of amiga_ulx3s is
+
 	-- FLEA OHM aliasing
 	-- keyboard
 	--alias ps2_clk1 : std_logic is usb_fpga_dp;
@@ -139,12 +141,13 @@ architecture struct of amiga_ulx3s is
         
 	-- END FLEA OHM ALIASING
 
-
 	signal clk  : std_logic := '0';	
 	signal clk7m  : std_logic := '0';
-	signal clk6m  : std_logic := '0';
+--	signal clk6m  : std_logic := '0';
 	signal clk28m  : std_logic := '0';   
-
+	signal clk48m  : std_logic := '0';
+	
+	signal clk_usb : std_logic; -- 6MHz or 48MHz
  
 	signal aud_l  : std_logic;
 	signal aud_r  : std_logic;  
@@ -226,12 +229,14 @@ architecture struct of amiga_ulx3s is
 	
 	-- emard usb hid joystick
 	signal S_hid_reset: std_logic;
-	signal S_hid_report: std_logic_vector(63 downto 0);
+	signal S_hid_report: std_logic_vector(C_report_length*8-1 downto 0);
 	signal S_hid_valid: std_logic;
         signal S_report_decoded: T_report_decoded;
 	-- end emard usb hid joystick
 	
 	signal R_program: std_logic_vector(26 downto 0);
+
+  constant C_usb_speed: std_logic := '0'; -- 0:low 1:full
 begin
   wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
   --led(0) <= btn(0); -- visual indication of btn press
@@ -264,11 +269,11 @@ begin
   usbhid_host_inst: entity usbh_host_hid
   generic map
   (
-    C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
+    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
   )
   port map
   (
-    clk => clk6m, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
     bus_reset => S_hid_reset,
     usb_dif => usb_fpga_dp,
     usb_dp => usb_fpga_bd_dp,
@@ -288,19 +293,19 @@ begin
   )
   port map
   (
-    clk => clk6m,
+    clk => clk_usb,
     hid_report => S_hid_report,
     hid_valid => S_hid_valid,
     decoded => S_report_decoded
   );
   end generate;
 
-  process(clk6m)
+  process(clk_usb)
   begin
-    if rising_edge(clk6m) then
+    if rising_edge(clk_usb) then
       -- Joystick1 port used as mouse (right stick)
-      n_joy1(5) <= not (          S_report_decoded.btn_mouse_right);  -- fire2
-      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_mouse_left); -- fire
+      n_joy1(5) <= not (          S_report_decoded.btn_rmouse_right);  -- fire2
+      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rmouse_left); -- fire
       n_joy1(3) <= not (S_report_decoded.rmouseq_y(0));       -- LSB quadrature y
       n_joy1(2) <= not (S_report_decoded.rmouseq_x(0));       -- LSB quadrature x
       n_joy1(1) <= not (S_report_decoded.rmouseq_y(1));       -- MSB quadrature y
@@ -350,21 +355,34 @@ begin
 		locked			=>  pll_locked
   );
 
+  G_clk_usb_low: if C_usb_speed = '0' generate
   clk1 : entity work.clk_ramusb_vhdl
   port map
   (
 		clkin			=>	sys_clock,
 		clk_112			=>	open,
 		clk_112_120deg		=>	sdram_clk,
-		clk_6			=>	clk6m       --   6.05 MHz (ideally 6 MHz)
+		clk_6			=>	clk_usb    -- 6.05 MHz (ideal would be 6 MHz)
   );
+  end generate;
 
---	clk2 : entity work.clk_usb_vhdl
---	port map
---	(
---		clkin			=>	sys_clock,
---		clk_6			=>	open       --   6.05 MHz (ideally 6 MHz)
---	);
+  G_clk_usb_high: if C_usb_speed = '1' generate
+    clk1 : entity work.clk_ramusb_vhdl
+    port map
+    (
+		clkin			=>	sys_clock,
+		clk_112			=>	open,
+		clk_112_120deg		=>	sdram_clk,
+		clk_6			=>	open       -- 6.05 MHz
+    );
+    clk2 : entity work.clk_usb_vhdl
+    port map
+    (
+      clkin	=>	sys_clock,
+      clk_48	=>	clk_usb,
+      clk_6	=>	open
+    );
+  end generate;
 
   reset_combo1 <=	sys_reset and pll_locked;
 		

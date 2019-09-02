@@ -34,8 +34,10 @@ CLK2_FILE_NAME = ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME).v
 CLK2_OPTIONS = \
   --module=$(CLK2_NAME) \
   --clkin=25 \
-  --clkout0_name=clk_50          --clkout0=50 \
-  --clkout1_name=clk_6           --clkout1=6
+  --clkout0_name=clk_240         --clkout0=240 \
+  --clkout1_name=clk_48          --clkout1=48 \
+  --clkout2_name=clk_6           --clkout2=6
+
 
 # ******* design files *******
 # current boards v3.0.3 v2.1.2
