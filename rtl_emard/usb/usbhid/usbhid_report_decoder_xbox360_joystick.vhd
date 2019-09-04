@@ -29,10 +29,10 @@ end;
 architecture rtl of usbhid_report_decoder is
   signal R_hid_report: std_logic_vector(hid_report'range);
   signal R_hid_valid: std_logic;
---  alias S_lstick_x: std_logic_vector(7 downto 0) is R_hid_report(63 downto 56);
---  alias S_lstick_y: std_logic_vector(7 downto 0) is R_hid_report(79 downto 72);
-  constant S_lstick_x: std_logic_vector(7 downto 0) := x"80";
-  constant S_lstick_y: std_logic_vector(7 downto 0) := x"80";
+  alias S_lstick_x: std_logic_vector(7 downto 0) is R_hid_report(63 downto 56);
+  alias S_lstick_y: std_logic_vector(7 downto 0) is R_hid_report(79 downto 72);
+--  constant S_lstick_x: std_logic_vector(7 downto 0) := x"00";
+--  constant S_lstick_y: std_logic_vector(7 downto 0) := x"00";
   alias S_rstick_x: std_logic_vector(7 downto 0) is R_hid_report(95 downto 88);
   alias S_rstick_y: std_logic_vector(7 downto 0) is R_hid_report(111 downto 104);
   alias S_analog_ltrigger: std_logic_vector(7 downto 0) is R_hid_report(39 downto 32);
@@ -68,9 +68,9 @@ begin
   process(clk) is
   begin
     if rising_edge(clk) then
-      if hid_valid = '1' then
+--      if hid_valid = '1' then
         R_hid_report <= hid_report; -- register to release timing closure
-      end if;
+--      end if;
       R_hid_valid <= hid_valid;
     end if;
   end process;
@@ -110,14 +110,15 @@ begin
   decoded.hat_right <= S_hat_right;
 
   -- analog stick to digital decoders
-  decoded.lstick_left  <= '1' when S_lstick_x(7 downto 6) = "00" else '0';
-  decoded.lstick_right <= '1' when S_lstick_x(7 downto 6) = "11" else '0';
-  decoded.lstick_up    <= '1' when S_lstick_y(7 downto 6) = "00" else '0';
-  decoded.lstick_down  <= '1' when S_lstick_y(7 downto 6) = "11" else '0';
-  decoded.rstick_left  <= '1' when S_rstick_x(7 downto 6) = "00" else '0';
-  decoded.rstick_right <= '1' when S_rstick_x(7 downto 6) = "11" else '0';
-  decoded.rstick_up    <= '1' when S_rstick_y(7 downto 6) = "00" else '0';
-  decoded.rstick_down  <= '1' when S_rstick_y(7 downto 6) = "11" else '0';
+  -- down left negative, up right positive
+  decoded.lstick_left  <= '1' when S_lstick_x(7 downto 5) = "100" else '0';
+  decoded.lstick_right <= '1' when S_lstick_x(7 downto 5) = "011" else '0';
+  decoded.lstick_up    <= '1' when S_lstick_y(7 downto 5) = "011" else '0';
+  decoded.lstick_down  <= '1' when S_lstick_y(7 downto 5) = "100" else '0';
+  decoded.rstick_left  <= '1' when S_rstick_x(7 downto 5) = "100" else '0';
+  decoded.rstick_right <= '1' when S_rstick_x(7 downto 5) = "011" else '0';
+  decoded.rstick_up    <= '1' when S_rstick_y(7 downto 5) = "011" else '0';
+  decoded.rstick_down  <= '1' when S_rstick_y(7 downto 5) = "100" else '0';
 
   decoded.analog_ltrigger <= S_analog_ltrigger;
   decoded.analog_rtrigger <= S_analog_rtrigger;
