@@ -143,9 +143,7 @@ architecture struct of amiga_ulx3s is
 
 	signal clk  : std_logic := '0';	
 	signal clk7m  : std_logic := '0';
---	signal clk6m  : std_logic := '0';
 	signal clk28m  : std_logic := '0';   
-	signal clk48m  : std_logic := '0';
 	
 	signal clk_usb : std_logic; -- 6MHz or 48MHz
  
