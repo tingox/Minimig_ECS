@@ -1,13 +1,10 @@
 VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME)_vhdl.vhd \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME)_vhdl.vhd \
-../../../../rtl_emard/lattice/ulx3s/clocks/clk_25M_112M5_140Mp_140Mn_7M5.vhd \
-../../../../rtl_emard/lattice/ulx3s/clocks/C64_Clock.vhd \
-../../../../rtl_emard/lattice/ulx3s/clocks/DVI_PLL.vhd \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME)_vhdl.vhd \
 ../../../../Minimig_ECS/impl1/source/Fampiga.vhd \
 ../../../../source_emard/cfide.vhd \
 ../../../../Minimig_ECS/impl1/source/Debounce.vhd \
-../../../../Minimig_ECS/RTL/sdram_cache.vhd \
 ../../../../Minimig_ECS/impl1/source/TG68K.vhd \
 ../../../../Minimig_ECS/impl1/source/TG68K_ALU.vhd \
 ../../../../Minimig_ECS/impl1/source/TG68K_Pack.vhd \
@@ -28,21 +25,27 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/vga/hdmi/vga2dvid.vhd \
 ../../../../rtl_emard/vga/hdmi/tmds_encoder.vhd \
 ../../../../rtl_emard/vga/lattice/ecp5u/ddr_out_emard.vhd \
-../../../../rtl_emard/usbhid/usb_req_gen_func_pack.vhd \
-../../../../rtl_emard/usbhid/usbhid_host.vhd \
-../../../../rtl_emard/usbhid/usb_enum_saitek_minimal_pack.vhd \
-../../../../rtl_emard/usbhid/usbhid_report_decoder_saitek.vhd \
-../../../../rtl_emard/usbhid/report_decoded_pack_saitek.vhd \
+../../../../rtl_emard/usb/usbhid/usbhid_report_decoder_saitek_joystick.vhd \
+../../../../rtl_emard/usb/usbhid/report_decoded_pack_generic.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_setup_pack.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_host_hid.vhd \
+../../../../rtl_emard/usb/usbhost/usbh_sie_vhdl.vhd \
+../../../../rtl_emard/usb/usb11_phy_vhdl/usb_phy.vhd \
+../../../../rtl_emard/usb/usb11_phy_vhdl/usb_rx_phy_48MHz.vhd \
+../../../../rtl_emard/usb/usb11_phy_vhdl/usb_tx_phy.vhd \
 ../../../../rtl_emard/spdif/spdif_tx.vhd \
 ../../../../rtl_emard/osd/char_rom.vhd \
 ../../../../rtl_emard/generic/bram_true2p_1clk.vhd \
-../../../../rtl_emard/vga/hdmi/tmds_encoder.vhd \
-../../../../rtl_emard/vga/hdmi/ddr_dvid_out_se.vhd \
+../../../../Minimig_ECS/RTL/sdram_cache.vhd \
 
+# sdram controllers
+# ../../../../rtl_emard/sdram/sdram.vhd \
+# ../../../../Minimig_ECS/RTL/sdram_cache.vhd \
 
 VERILOG_FILES = \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME).v \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME).v \
+../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME).v \
 ../../../../Minimig_ECS/impl1/source/Agnus.v \
 ../../../../Minimig_ECS/impl1/source/Amber.v \
 ../../../../Minimig_ECS/impl1/source/Audio.v \
@@ -62,3 +65,6 @@ VERILOG_FILES = \
 ../../../../source_emard/twowaycache.v \
 ../../../../Minimig_ECS/impl1/source/Sprites.v \
 ../../../../source_emard/Userio.v \
+../../../../rtl_emard/usb/usbhost/usbh_sie.v \
+../../../../rtl_emard/usb/usbhost/usbh_crc5.v \
+../../../../rtl_emard/usb/usbhost/usbh_crc16.v \

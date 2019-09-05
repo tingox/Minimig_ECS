@@ -2,7 +2,7 @@
 PROJECT = minimig_ps2kbd
 BOARD = ulx3s
 # 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 25
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
 FLASH_SPI = 4
@@ -10,29 +10,33 @@ FLASH_SPI = 4
 FLASH_CHIP = is25lp128f
 
 # ******* design files *******
-CLK0_NAME = clk_video
+CLK0_NAME = clk_minimig
 CLK0_FILE_NAME = ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME).v
-# for new ecppll: to override above, rename CLK0_OPTIONS_NEW -> CLK0_OPTIONS
 CLK0_OPTIONS = \
   --module=$(CLK0_NAME) \
   --clkin=25 \
-  --clkout0=112.5 \
-  --clkout1=140 \
-  --clkout2=112.5 \
-  --phase2=160 \
-  --clkout3=6
+  --clkout0_name=clk_140 --clkout0=140.625 \
+  --clkout1_name=clk_112 --clkout1=112.5 \
+  --clkout2_name=clk_28  --clkout2=28.125 \
+  --clkout3_name=clk_7   --clkout3=7.03125
 
-CLK1_NAME = clk_minimig
+CLK1_NAME = clk_ramusb
 CLK1_FILE_NAME = ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME).v
-# for new ecppll: to override above, rename CLK0_OPTIONS_NEW -> CLK0_OPTIONS
 CLK1_OPTIONS = \
   --module=$(CLK1_NAME) \
   --clkin=25 \
-  --clkout0=112.5 \
-  --clkout1=112.5 \
-  --phase1=144 \
-  --clkout2=28 \
-  --clkout3=7
+  --clkout0_name=clk_112        --clkout0=112.5 \
+  --clkout1_name=clk_112_120deg --clkout1=112.5 --phase1=120 \
+  --clkout2_name=clk_6          --clkout2=6
+
+CLK2_NAME = clk_usb
+CLK2_FILE_NAME = ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME).v
+CLK2_OPTIONS = \
+  --module=$(CLK2_NAME) \
+  --clkin=25 \
+  --clkout0_name=clk_240         --clkout0=240 \
+  --clkout1_name=clk_48          --clkout1=48 \
+  --clkout2_name=clk_6           --clkout2=6
 
 # ******* design files *******
 # current boards v3.0.3 v2.1.2

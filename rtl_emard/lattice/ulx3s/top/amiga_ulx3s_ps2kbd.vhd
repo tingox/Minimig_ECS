@@ -17,6 +17,7 @@ use work.report_decoded_pack.all;
 entity amiga_ulx3s is
 generic
 (
+  C_programn: boolean := false; -- hold BTN0 to pull PROGRAMN low
   C_flea_av: boolean := false; -- use original flea's hdmi audio/video, false: use emard's audio/video
   C_flea_hdmi_audio: boolean := false -- great for digital TV's but incompatible for most PC monitors
 );
@@ -67,6 +68,9 @@ port
   -- SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
   shutdown: out std_logic := '0';
 
+  -- PROGRAMN if pulled down, skip to multiboot from SPI flash
+  user_programn: out std_logic := '1';
+
   -- Audio jack 3.5mm
   audio_l, audio_r, audio_v: inout std_logic_vector(3 downto 0) := (others => 'Z');
 
@@ -81,7 +85,9 @@ port
   gpdi_scl, gpdi_sda: inout std_logic;
 
   -- US2 port
-  usb_fpga_dp, usb_fpga_dn: inout std_logic;
+  usb_fpga_dp: inout std_logic;
+  usb_fpga_bd_dp, usb_fpga_bd_dn: inout std_logic;
+  usb_fpga_pu_dp, usb_fpga_pu_dn: out std_logic;
 
   -- Flash ROM (SPI0)
   -- commented out because it can't be used as GPIO
@@ -101,8 +107,8 @@ end;
 architecture struct of amiga_ulx3s is
 	-- FLEA OHM aliasing
 	-- keyboard
-	alias ps2_clk1 : std_logic is usb_fpga_dp;
-	alias ps2_data1 : std_logic is usb_fpga_dn;
+	alias ps2_clk1 : std_logic is usb_fpga_bd_dp;
+	alias ps2_data1 : std_logic is usb_fpga_bd_dn;
 	--alias ps2_clk1 : std_logic is gp(0);
 	--alias ps2_data1 : std_logic is gn(0);
 	--signal ps2_clk1 : std_logic := '1';
@@ -136,9 +142,9 @@ architecture struct of amiga_ulx3s is
 
 	signal clk  : std_logic := '0';	
 	signal clk7m  : std_logic := '0';
-	signal clk6m  : std_logic := '0';
 	signal clk28m  : std_logic := '0';   
 
+	signal clk_usb : std_logic; -- 6MHz or 48MHz
  
 	signal aud_l  : std_logic;
 	signal aud_r  : std_logic;  
@@ -221,9 +227,11 @@ architecture struct of amiga_ulx3s is
 	-- emard usb hid joystick
 	signal S_hid_reset: std_logic;
 	signal S_hid_report: std_logic_vector(63 downto 0);
+	signal S_hid_valid: std_logic;
         signal S_report_decoded: T_report_decoded;
 	-- end emard usb hid joystick
-
+	signal R_program: std_logic_vector(26 downto 0);
+  constant C_usb_speed: std_logic := '0'; -- 0:low 1:full
 begin
   wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
   led(0) <= btn(0); -- visual indication of btn press
@@ -233,20 +241,43 @@ begin
   sd_dat1_irq <= '1';
   sd_dat2 <= '1';
 
-  -- Housekeeping logic for unwanted peripherals on FleaFPGA Ohm board goes here..
-  -- (Note: comment out any of the following code lines if peripheral is required)
+  G_yes_programn: if C_programn generate
+  -- exit this FPGA core by pulling programn
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if btn(0) = '0' then
+        R_program <= R_program + 1; -- BTN0 pressed
+      else
+        R_program <= (others => '0'); -- BTN0 released
+      end if;
+    end if;
+  end process;
+  user_programn <= not R_program(R_program'high); -- high bit is delayed after keyperss
+  end generate;
 
-  use_usbhid: if false generate
-  usbhid_host_inst: entity usbhid_host
+  G_not_programn: if not C_programn generate
+  user_programn <= '1';
+  end generate;
+
+  G_usb_hid: if false generate
+  usbhid_host_inst: entity usbh_host_hid
+  generic map
+  (
+    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
+  )
   port map
   (
-    clk => clk6m, -- 7.5 MHz for low-speed USB1.0 device or 60 MHz for full-speed USB1.1 device
-    reset => S_hid_reset,
-    usb_data(1) => usb_fpga_dp,
-    usb_data(0) => usb_fpga_dn,
+    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+    bus_reset => S_hid_reset,
+    usb_dif => usb_fpga_dp,
+    usb_dp => usb_fpga_bd_dp,
+    usb_dn => usb_fpga_bd_dn,
     hid_report => S_hid_report,
-    leds => open -- debug
+    hid_valid => S_hid_valid
   );
+  usb_fpga_pu_dp <= '0';
+  usb_fpga_pu_dn <= '0';
 
   usbhid_report_decoder_inst: entity usbhid_report_decoder
   generic map
@@ -257,14 +288,15 @@ begin
   )
   port map
   (
-    clk => clk6m,
+    clk => clk_usb,
     hid_report => S_hid_report,
+    hid_valid => S_hid_valid,
     decoded => S_report_decoded
   );
 
-  process(clk6m)
+  process(clk7m)
   begin
-    if rising_edge(clk6m) then
+    if rising_edge(clk7m) then
       -- Joystick1 port used as mouse (right stick)
       n_joy1(5) <= not (          S_report_decoded.btn_start);  -- fire2
       n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rstick); -- fire
@@ -309,80 +341,50 @@ begin
   n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
 
   -- PS/2 Keyboard and Mouse definitions
-	ps2k_dat_in<=PS2_data1;
-	PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
-	ps2k_clk_in<=PS2_clk1;
-	PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
- 
-	ps2m_dat_in<=PS2_data2;
-	PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
-	ps2m_clk_in<=PS2_clk2;
-	PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
+  ps2k_dat_in<=PS2_data1;
+  PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
+  ps2k_clk_in<=PS2_clk1;
+  PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
+
+  ps2m_dat_in<=PS2_data2;
+  PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
+  ps2m_clk_in<=PS2_clk2;
+  PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
   
-	-- User HDL project modules and port mappings go here..
-
-	orig_clocks: if false generate
-	u0 : entity work.C64_clock
-	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	clk,
-		
-		CLKOS			=>	open, -- sdram_clk,
-		CLKOS2			=>	clk28m,
-		CLKOS3			=>	clk7m,
-		LOCK			=>  pll_locked
-		);  
-
-        sdram_clk <= not clk;
-		
-	u01 : entity work.DVI_PLL -- 
-	port map(
-		CLKI			=>	sys_clock,
-		CLKOP			=>	open, -- 112.5MHz
-		CLKOS			=>	clk_dvi, -- 140.625 MHz
-		CLKOS2			=>	clk_dvin -- 140.625 MHz
-		);
-        end generate;
-
-	usb_clocks: if true generate
-	u0 : entity work.clk_minimig_vhdl
-	port map(
-		clkin			=>	sys_clock, --  25       MHz
-		clkout0			=>	clk,       -- 112.5     MHz
-		clkout1			=>	sdram_clk, -- 112.5     MHz phase 144 deg
-		clkout2			=>	clk28m,    --  28.125   MHz CPUx4 video
-		clkout3			=>	clk7m,     --   7.03125 MHz CPU
+  clk0 : entity work.clk_minimig_vhdl
+  port map
+  (
+		clkin			=>	sys_clock,
+		clk_140			=>	clk_dvi,
+		clk_112			=>	clk,
+		clk_28			=>	clk28m,
+		clk_7			=>	clk7m,
 		locked			=>  pll_locked
-		);  
-		
-	u01 : entity work.clk_video_vhdl
-	port map(
-		clkin			=>	sys_clock, --  25     MHz
-		clkout0			=>	open,      -- 112.5   MHz
-		clkout1			=>	clk_dvi,   -- 140.625 MHz DVI
-		clkout2			=>	open,      -- 112.5   MHz phase 144 deg
-		clkout3			=>	clk6m,     --   6.05  MHz (USB)
-		locked                  =>      open
-		);
-        end generate;
+  );
 
-reset_combo1 <=	sys_reset and pll_locked;
-		
-	u10 : entity work.poweronreset
-		port map( 
-			clk => clk,
-			reset_button => reset_combo1,
-			reset_out => reset_n
-			--power_button => power_button,
-			--power_hold => power_hold		
-		);		
-		
+  clk1 : entity work.clk_ramusb_vhdl
+  port map
+  (
+		clkin			=>	sys_clock,
+		clk_112			=>	open,
+		clk_112_120deg		=>	sdram_clk,
+		clk_6			=>	open    -- 6.05 MHz (ideal would be 6 MHz)
+  );
 
+  reset_combo1 <= sys_reset and pll_locked;
 		
-led(7) <= not diskoff;
+  u10 : entity work.poweronreset
+  port map( 
+    clk => clk,
+    reset_button => reset_combo1,
+    reset_out => reset_n
+  );		
+		
+  led(7) <= not diskoff;
 
-myFampiga: entity work.Fampiga
-	port map(
+  myFampiga: entity work.Fampiga
+  port map
+  (
 		clk=> 	clk,
 		clk7m=> clk7m,
 		clk28m=> clk28m,
@@ -444,125 +446,9 @@ myFampiga: entity work.Fampiga
 		sd_miso => mmc_miso,
 		sd_mosi => mmc_mosi,
 		sd_clk => mmc_clk
-	);
-
-flea_video: if C_flea_av generate
--- Audio output mapped to 3.5mm jack
-audio_r(1 downto 0) <= (others => DAC_R);
-audio_l(1 downto 0) <= (others => DAC_L);
-process(clk28m)
-begin
-  if rising_edge(clk28m) then
-	red <= std_logic_vector(red_u) & "0000";
-	green <= std_logic_vector(green_u) & "0000";
-	blue <= std_logic_vector(blue_u) & "0000";  
-	--blank <= hsync AND vsync;
-	blank <= videoblank;	
-	dvi_hsync <= hsync;
-	dvi_vsync <= vsync;
-  end if;
-end process;    
-
-  left_sampled <= leftdatasum(14 downto 0) & '0';
-  right_sampled <= rightdatasum(14 downto 0) & '0';
-	
-  Inst_DVI: entity work.dvid 
-  --GENERIC MAP (
-  --  Invert_Red => true,
-  --  Invert_Green => true,
-  --  Invert_Blue => true,
-  --  Invert_Clock => true
-  --)
-  PORT MAP (
-    clk		  => clk_dvi,
-    clk_n         => clk_dvin,	 
-    clk_pixel     => clk28m,
-    clk_pixel_en  => true, 
-	
-    red_p         => red,
-    green_p       => green,
-    blue_p        => blue,
-    blank         => blank,
-    hsync         => dvi_hsync, 
-    vsync         => dvi_vsync,
-	EnhancedMode  => C_flea_hdmi_audio,
-	IsProgressive  => true, 
-	IsPAL  		  => true, 
-	Is30kHz  	  => true,
-	Limited_Range  => false,
-	Widescreen    => true,
-	HDMI_audio_L  => left_sampled,
-	HDMI_audio_R  => right_sampled,
-	HDMI_LeftEnable  => l_audio_ena,
-	HDMI_RightEnable => l_audio_ena,
-    dvid_red      => dvid_red,
-    dvid_green    => dvid_green,
-    dvid_blue     => dvid_blue,
-    dvid_clock    => dvid_clock,
-    red_s         => LVDS_Red,
-    green_s       => LVDS_Green, 
-    blue_s        => LVDS_Blue,
-    clock_s       => LVDS_ck
-  ); 
-  
-process(clk28m)
-begin
-  if rising_edge(clk28m) then
-    if cnt=cnt_div-1 then
-      ce  <= '1';
-      cnt <= 0; 
-    else
-      ce  <= '0';
-      cnt <= cnt +1 ;
-    end if;
-  end if;
-end process;
-process(clk28m)
-begin
-  if rising_edge(clk28m) then
-	if ce='1' then
-	   l_audio_ena <= true;
-	else
-	   l_audio_ena <= false;
-    end if;
-  end if;
-end process;
-
-  -- this module instantiates vendor specific modules ddr_out to
-  -- convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
-  G_vgatext_ddrout_flea: entity work.ddr_dvid_out_se
-  port map
-  (
-    clk       => clk_pixel_shift,
-    clk_n     => clkn_pixel_shift,
-    in_red    => dvid_red,
-    in_green  => dvid_green,
-    in_blue   => dvid_blue,
-    in_clock  => dvid_clock,
-    out_red   => ddr_d(2),
-    out_green => ddr_d(1),
-    out_blue  => ddr_d(0),
-    out_clock => ddr_clk
   );
 
-  gpdi_data_channels_flea: for i in 0 to 2 generate
-    gpdi_diff_data: OLVDS
-    port map(A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
-  end generate;
-  gpdi_diff_clock_flea: OLVDS
-  port map(A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
-
---gpdi_dp(2) <= LVDS_Red(0);
---gpdi_dn(2) <= not LVDS_Red(0);
---gpdi_dp(1) <= LVDS_Green(0);
---gpdi_dn(1) <= not LVDS_Green(0);
---gpdi_dp(0) <= LVDS_Blue(0);
---gpdi_dn(0) <= not LVDS_Blue(0);
---gpdi_clkp <= LVDS_ck(0);
---gpdi_clkn <= not LVDS_ck(0);
-end generate;
-
-emard_video: if not C_flea_av generate
+  emard_video: if not C_flea_av generate
   S_audio(23 downto 9) <= leftdatasum(14 downto 0);
   G_spdif_out: entity work.spdif_tx
   generic map
@@ -607,30 +493,18 @@ emard_video: if not C_flea_av generate
       out_clock => dvid_clock
   );
 
-  -- this module instantiates vendor specific modules ddr_out to
+  -- vendor specific DDR modules
   -- convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
-  G_vgatext_ddrout: entity work.ddr_dvid_out_se
-  port map
-  (
-    clk       => clk_pixel_shift,
-    clk_n     => clkn_pixel_shift,
-    in_red    => dvid_red,
-    in_green  => dvid_green,
-    in_blue   => dvid_blue,
-    in_clock  => dvid_clock,
-    out_red   => ddr_d(2),
-    out_green => ddr_d(1),
-    out_blue  => ddr_d(0),
-    out_clock => ddr_clk
-  );
-
+  ddr_red:   ODDRX1F port map (D0=>dvid_red(0),   D1=>dvid_red(1),   Q=>ddr_d(2), SCLK=>clk_pixel_shift, RST=>'0');
+  ddr_green: ODDRX1F port map (D0=>dvid_green(0), D1=>dvid_green(1), Q=>ddr_d(1), SCLK=>clk_pixel_shift, RST=>'0');
+  ddr_blue:  ODDRX1F port map (D0=>dvid_blue(0),  D1=>dvid_blue(1),  Q=>ddr_d(0), SCLK=>clk_pixel_shift, RST=>'0');
+  ddr_clock: ODDRX1F port map (D0=>dvid_clock(0), D1=>dvid_clock(1), Q=>ddr_clk,  SCLK=>clk_pixel_shift, RST=>'0');
+  -- vendor specific modules for differential output
   gpdi_data_channels: for i in 0 to 2 generate
-    gpdi_diff_data: OLVDS
-    port map(A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
+    gpdi_diff_data: OLVDS port map (A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
   end generate;
-  gpdi_diff_clock: OLVDS
-  port map(A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
+  gpdi_diff_clock: OLVDS port map (A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
 
-end generate;
+  end generate;
 
 end struct;
