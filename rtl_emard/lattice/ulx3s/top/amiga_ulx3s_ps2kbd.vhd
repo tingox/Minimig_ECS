@@ -18,8 +18,7 @@ entity amiga_ulx3s is
 generic
 (
   C_programn: boolean := false; -- hold BTN0 to pull PROGRAMN low
-  C_flea_av: boolean := false; -- use original flea's hdmi audio/video, false: use emard's audio/video
-  C_flea_hdmi_audio: boolean := false -- great for digital TV's but incompatible for most PC monitors
+  C_spdif:    boolean := false  -- SPDIF audio, may cause synthesis problems if enabled on 85F
 );
 port
 (
@@ -105,137 +104,134 @@ port
 end;
 
 architecture struct of amiga_ulx3s is
-	-- FLEA OHM aliasing
-	-- keyboard
-	alias ps2_clk1 : std_logic is usb_fpga_bd_dp;
-	alias ps2_data1 : std_logic is usb_fpga_bd_dn;
-	--alias ps2_clk1 : std_logic is gp(0);
-	--alias ps2_data1 : std_logic is gn(0);
-	--signal ps2_clk1 : std_logic := '1';
-	--signal ps2_data1 : std_logic := '1';
-	signal PS_enable: std_logic; -- dummy on ulx3s v1.7.x
-        -- mouse
-	alias ps2_clk2 : std_logic is gp(1);
-	alias ps2_data2 : std_logic is gn(1);
-	--signal ps2_clk2 : std_logic := '1';
-	--signal ps2_data2 : std_logic := '1';
+  -- FLEA OHM aliasing
+  -- keyboard
+  alias ps2_clk1 : std_logic is usb_fpga_bd_dp;
+  alias ps2_data1 : std_logic is usb_fpga_bd_dn;
+  --alias ps2_clk1 : std_logic is gp(0);
+  --alias ps2_data1 : std_logic is gn(0);
+  --signal ps2_clk1 : std_logic := '1';
+  --signal ps2_data1 : std_logic := '1';
+  signal PS_enable: std_logic; -- dummy on ulx3s v1.7.x
+  -- mouse
+  alias ps2_clk2 : std_logic is gp(1);
+  alias ps2_data2 : std_logic is gn(1);
+  --signal ps2_clk2 : std_logic := '1';
+  --signal ps2_data2 : std_logic := '1';
 
-	alias sys_clock: std_logic is clk_25MHz;
-	alias slave_rx_i: std_logic is ftdi_txd;
-	alias slave_tx_o: std_logic is ftdi_rxd;
+  alias sys_clock: std_logic is clk_25MHz;
+  alias slave_rx_i: std_logic is ftdi_txd;
+  alias slave_tx_o: std_logic is ftdi_rxd;
 	
-	signal LVDS_Red: std_logic_vector(0 downto 0);
-	signal LVDS_Green: std_logic_vector(0 downto 0);
-	signal LVDS_Blue: std_logic_vector(0 downto 0);
-	signal LVDS_ck: std_logic_vector(0 downto 0);
-	signal sys_reset: std_logic;
+  signal LVDS_Red: std_logic_vector(0 downto 0);
+  signal LVDS_Green: std_logic_vector(0 downto 0);
+  signal LVDS_Blue: std_logic_vector(0 downto 0);
+  signal LVDS_ck: std_logic_vector(0 downto 0);
+  signal sys_reset: std_logic;
 
-	alias mmc_dat1: std_logic is sd_dat1_irq;
-	alias mmc_dat2: std_logic is sd_dat2;
-	alias mmc_n_cs: std_logic is sd_dat3_csn;
-	alias mmc_clk: std_logic is sd_clk;
-	alias mmc_mosi: std_logic is sd_cmd_di;
-	alias mmc_miso: std_logic is sd_dat0_do;
+  alias mmc_dat1: std_logic is sd_dat1_irq;
+  alias mmc_dat2: std_logic is sd_dat2;
+  alias mmc_n_cs: std_logic is sd_dat3_csn;
+  alias mmc_clk: std_logic is sd_clk;
+  alias mmc_mosi: std_logic is sd_cmd_di;
+  alias mmc_miso: std_logic is sd_dat0_do;
         
-	-- END FLEA OHM ALIASING
+  -- END FLEA OHM ALIASING
 
+  signal clk  : std_logic := '0';	
+  signal clk7m  : std_logic := '0';
+  signal clk28m  : std_logic := '0';   
 
-	signal clk  : std_logic := '0';	
-	signal clk7m  : std_logic := '0';
-	signal clk28m  : std_logic := '0';   
-
-	signal clk_usb : std_logic; -- 6MHz or 48MHz
+  signal clk_usb : std_logic; -- 6MHz or 48MHz
  
-	signal aud_l  : std_logic;
-	signal aud_r  : std_logic;  
-	signal dma_1  : std_logic := '1'; 
+  signal aud_l  : std_logic;
+  signal aud_r  : std_logic;  
+  signal dma_1  : std_logic := '1'; 
  
-	signal n_joy1   : std_logic_vector(5 downto 0) := (others => '1');
-	signal n_joy2   : std_logic_vector(5 downto 0) := (others => '1');
+  signal n_joy1   : std_logic_vector(5 downto 0) := (others => '1');
+  signal n_joy2   : std_logic_vector(5 downto 0) := (others => '1');
  
-	signal ps2k_clk_in : std_logic;
-	signal ps2k_clk_out : std_logic;
-	signal ps2k_dat_in : std_logic;
-	signal ps2k_dat_out : std_logic;	
-	signal ps2m_clk_in : std_logic;
-	signal ps2m_clk_out : std_logic;
-	signal ps2m_dat_in : std_logic;
-	signal ps2m_dat_out : std_logic;	
+  signal ps2k_clk_in : std_logic;
+  signal ps2k_clk_out : std_logic;
+  signal ps2k_dat_in : std_logic;
+  signal ps2k_dat_out : std_logic;	
+  signal ps2m_clk_in : std_logic;
+  signal ps2m_clk_out : std_logic;
+  signal ps2m_dat_in : std_logic;
+  signal ps2m_dat_out : std_logic;	
  
-   signal red_u     : std_logic_vector(3 downto 0);
-   signal green_u   : std_logic_vector(3 downto 0);
-   signal blue_u    : std_logic_vector(3 downto 0); 
+  signal red_u     : std_logic_vector(3 downto 0);
+  signal green_u   : std_logic_vector(3 downto 0);
+  signal blue_u    : std_logic_vector(3 downto 0); 
  
-   signal red     : std_logic_vector(7 downto 0) := (others => '0');
-   signal green   : std_logic_vector(7 downto 0) := (others => '0');
-   signal blue    : std_logic_vector(7 downto 0) := (others => '0');
-   signal hsync   : std_logic := '0';
-   signal vsync   : std_logic := '0';
-   signal dvi_hsync   : std_logic := '0';
-   signal dvi_vsync   : std_logic := '0';
-   signal blank   : std_logic := '0';
-	signal videoblank: std_logic;  
+  signal red     : std_logic_vector(7 downto 0) := (others => '0');
+  signal green   : std_logic_vector(7 downto 0) := (others => '0');
+  signal blue    : std_logic_vector(7 downto 0) := (others => '0');
+  signal hsync   : std_logic := '0';
+  signal vsync   : std_logic := '0';
+  signal dvi_hsync   : std_logic := '0';
+  signal dvi_vsync   : std_logic := '0';
+  signal blank   : std_logic := '0';
+  signal videoblank: std_logic;  
   
-   signal clk_dvi  : std_logic := '0';
-   signal clk_dvin : std_logic := '0'; 
+  signal clk_dvi  : std_logic := '0';
+  signal clk_dvin : std_logic := '0'; 
  
-	signal temp_we : std_logic := '0';
-	signal diskoff : std_logic;
+  signal temp_we : std_logic := '0';
+  signal diskoff : std_logic;
 	
- 	signal pwm_accumulator : std_logic_vector(8 downto 0);
+  signal pwm_accumulator : std_logic_vector(8 downto 0);
 	
-    -- signal clk_vga   : std_logic := '0';
-    signal PLL_lock  : std_logic := '0';
-    signal n_15khz   : std_logic := '1';
+  -- signal clk_vga   : std_logic := '0';
+  signal PLL_lock  : std_logic := '0';
+  signal n_15khz   : std_logic := '1';
 
-	signal VTEMP_DAC		:std_logic_vector(4 downto 0);
-	signal audio_data : std_logic_vector(17 downto 0);
-	signal convert_audio_data : std_logic_vector(17 downto 0);
+  signal VTEMP_DAC		:std_logic_vector(4 downto 0);
+  signal audio_data : std_logic_vector(17 downto 0);
+  signal convert_audio_data : std_logic_vector(17 downto 0);
 
-	signal DAC_R : std_logic;
-	signal DAC_L : std_logic;
+  signal DAC_R : std_logic;
+  signal DAC_L : std_logic;
 
-	signal l_audio_ena    : boolean; 
-	signal r_audio_ena    : boolean;
+  signal l_audio_ena    : boolean; 
+  signal r_audio_ena    : boolean;
 	
-	constant cnt_div: integer:=617;                  -- Countervalue for 48khz Audio Enable,  567 for 25MHz PCLK
-    signal   cnt:     integer range 0 to cnt_div-1; 
-    signal   ce:      std_logic;
+  constant cnt_div: integer:=617;                  -- Countervalue for 48khz Audio Enable,  567 for 25MHz PCLK
+  signal   cnt:     integer range 0 to cnt_div-1; 
+  signal   ce:      std_logic;
 
-    signal   rightdatasum:	std_logic_vector(14 downto 0);
-    signal   leftdatasum:	std_logic_vector(14 downto 0);
-    signal   left_sampled:	std_logic_vector(15 downto 0);
-    signal   right_sampled:	std_logic_vector(15 downto 0);
-	
+  signal   rightdatasum:	std_logic_vector(14 downto 0);
+  signal   leftdatasum:	std_logic_vector(14 downto 0);
+  signal   left_sampled:	std_logic_vector(15 downto 0);
+  signal   right_sampled:	std_logic_vector(15 downto 0);
 	 
-    signal   pll_locked 	: std_logic;
-    signal   reset_n 	: std_logic;
-    signal   reset_combo1 	: std_logic;
+  signal   pll_locked 	: std_logic;
+  signal   reset_n 	: std_logic;
+  signal   reset_combo1 	: std_logic;
 
-
-        -- emard audio-video and aliasing
-	signal S_audio: std_logic_vector(23 downto 0) := (others => '0');
-	signal S_spdif_out: std_logic;
-	signal ddr_d: std_logic_vector(2 downto 0);
-	signal ddr_clk: std_logic;
-	signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
-	alias clk_pixel: std_logic is clk28m;
-	alias clk_pixel_shift: std_logic is clk_dvi;
-	alias clkn_pixel_shift: std_logic is clk_dvin;
-	-- end emard AV
+  -- emard audio-video and aliasing
+  signal S_audio: std_logic_vector(23 downto 0) := (others => '0');
+  signal S_spdif_out: std_logic;
+  signal ddr_d: std_logic_vector(2 downto 0);
+  signal ddr_clk: std_logic;
+  signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
+  alias clk_pixel: std_logic is clk28m;
+  alias clk_pixel_shift: std_logic is clk_dvi;
+  alias clkn_pixel_shift: std_logic is clk_dvin;
+  -- end emard AV
 	
-	-- emard usb hid joystick
-	signal S_hid_reset: std_logic;
-	signal S_hid_report: std_logic_vector(63 downto 0);
-	signal S_hid_valid: std_logic;
-        signal S_report_decoded: T_report_decoded;
-	-- end emard usb hid joystick
-	signal R_program: std_logic_vector(26 downto 0);
+  -- emard usb hid joystick
   constant C_usb_speed: std_logic := '0'; -- 0:low 1:full
+  signal S_hid_reset: std_logic;
+  signal S_hid_report: std_logic_vector(63 downto 0);
+  signal S_hid_valid: std_logic;
+  signal S_report_decoded: T_report_decoded;
+  -- end emard usb hid joystick
+  signal R_program: std_logic_vector(26 downto 0);
+
 begin
-  wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
-  led(0) <= btn(0); -- visual indication of btn press
   -- btn(0) has inverted logic
+  wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
   sys_reset <= btn(0);
   s_hid_reset <= not btn(0);
   sd_dat1_irq <= '1';
@@ -283,8 +279,8 @@ begin
   generic map
   (
     C_rmouse => true, -- right stick to mouse quadrature encoder
-    C_rmousex_scaler => 22, -- less -> faster mouse
-    C_rmousey_scaler => 22  -- less -> faster mouse
+    C_rmousex_scaler => 23, -- less -> faster mouse
+    C_rmousey_scaler => 23  -- less -> faster mouse
   )
   port map
   (
@@ -323,9 +319,14 @@ begin
   process(clk7m)
   begin
     if rising_edge(clk7m) then
-      -- Joystick2 port used as joystick (left stick, keys abxy, right trigger/bumper)
-      -- Joystick2 bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
       -- inverted logic: joystick switches pull down when pressed
+      n_joy1(5) <= '1';
+      n_joy1(4) <= not btn(1); -- mouse click
+      n_joy1(3) <= '1';
+      n_joy1(2) <= '1';
+      n_joy1(1) <= '1';
+      n_joy1(0) <= '1';
+
       n_joy2(5) <= not btn(1); -- fire2
       n_joy2(4) <= not btn(2); -- fire
       n_joy2(3) <= not btn(3); -- up
@@ -334,45 +335,47 @@ begin
       n_joy2(0) <= not btn(6); -- right
     end if;
   end process;
+  led(5 downto 0) <= not n_joy2(5 downto 0);
   end generate;
 
   -- Video output horizontal scanrate select 15/30kHz select via GPIO header
   -- n_15khz <= GP(21) ; -- Default is 30kHz video out if pin left unconnected. Connect to GND for 15kHz video.
-  n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
+  --n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
+  n_15khz <= '1'; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
 
   -- PS/2 Keyboard and Mouse definitions
-  ps2k_dat_in<=PS2_data1;
+  ps2k_dat_in <= PS2_data1;
   PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
-  ps2k_clk_in<=PS2_clk1;
+  ps2k_clk_in <= PS2_clk1;
   PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
 
-  ps2m_dat_in<=PS2_data2;
+  ps2m_dat_in <= PS2_data2;
   PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
-  ps2m_clk_in<=PS2_clk2;
+  ps2m_clk_in <= PS2_clk2;
   PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
-  
+
   clk0 : entity work.clk_minimig_vhdl
   port map
   (
-		clkin			=>	sys_clock,
-		clk_140			=>	clk_dvi,
-		clk_112			=>	clk,
-		clk_28			=>	clk28m,
-		clk_7			=>	clk7m,
-		locked			=>  pll_locked
+    clkin   => sys_clock,
+    clk_140 => clk_dvi,
+    clk_112 => clk,
+    clk_28  => clk28m,
+    clk_7   => clk7m,
+    locked  => pll_locked
   );
 
   clk1 : entity work.clk_ramusb_vhdl
   port map
   (
-		clkin			=>	sys_clock,
-		clk_112			=>	open,
-		clk_112_120deg		=>	sdram_clk,
-		clk_6			=>	open    -- 6.05 MHz (ideal would be 6 MHz)
+    clkin          => sys_clock,
+    clk_112        => open,
+    clk_112_120deg => sdram_clk,
+    clk_6	   => open    -- 6.05 MHz (ideal would be 6 MHz)
   );
 
   reset_combo1 <= sys_reset and pll_locked;
-		
+
   u10 : entity work.poweronreset
   port map( 
     clk => clk,
@@ -385,72 +388,73 @@ begin
   myFampiga: entity work.Fampiga
   port map
   (
-		clk=> 	clk,
-		clk7m=> clk7m,
-		clk28m=> clk28m,
-		reset_n=>reset_n,--GPIO_wordin(0),--reset_n,
-		--powerled_out=>power_led(5 downto 4),
-		diskled_out=>diskoff,
-		--oddled_out=>odd_led(5), 
+    clk     => clk,
+    clk7m   => clk7m,
+    clk28m  => clk28m,
+    reset_n => reset_n,--GPIO_wordin(0),--reset_n,
 
-		-- SDRAM.  A separate shifted clock is provided by the toplevel
-		sdr_addr => sdram_a,
-		sdr_data => sdram_d,
-		sdr_ba => sdram_ba,
-                sdr_cke => sdram_cke,
-		sdr_dqm => sdram_dqm,
-		sdr_cs => sdram_csn,
-		sdr_we => sdram_wen,
-		sdr_cas => sdram_casn, 
-		sdr_ras => sdram_rasn,
+    --powerled_out=>power_led(5 downto 4),
+    diskled_out => diskoff,
+    --oddled_out=>odd_led(5), 
+
+    -- SDRAM.  A separate shifted clock is provided by the toplevel
+    sdr_addr => sdram_a,
+    sdr_data => sdram_d,
+    sdr_ba   => sdram_ba,
+    sdr_cke  => sdram_cke,
+    sdr_dqm  => sdram_dqm,
+    sdr_cs   => sdram_csn,
+    sdr_we   => sdram_wen,
+    sdr_cas  => sdram_casn, 
+    sdr_ras  => sdram_rasn,
 	 
-		-- VGA 
-		vga_r => red_u,
-		vga_g => green_u,
-		vga_b => blue_u,
-		vid_blank => videoblank,
-		vga_hsync => hsync,
-		vga_vsync => vsync,
-		n_15khz => n_15khz,
+    -- VGA 
+    vga_r     => red_u,
+    vga_g     => green_u,
+    vga_b     => blue_u,
+    vid_blank => videoblank,
+    vga_hsync => hsync,
+    vga_vsync => vsync,
+    n_15khz   => n_15khz,
 
-		-- PS/2
-		ps2k_clk_in => ps2k_clk_in,
-		ps2k_clk_out => ps2k_clk_out,
-		ps2k_dat_in => ps2k_dat_in,
-		ps2k_dat_out => ps2k_dat_out,
-		ps2m_clk_in => ps2m_clk_in,
-		ps2m_clk_out => ps2m_clk_out,
-		ps2m_dat_in => ps2m_dat_in,
-		ps2m_dat_out => ps2m_dat_out,
+    -- PS/2
+    ps2k_clk_in  => ps2k_clk_in,
+    ps2k_clk_out => ps2k_clk_out,
+    ps2k_dat_in  => ps2k_dat_in,
+    ps2k_dat_out => ps2k_dat_out,
+    ps2m_clk_in  => ps2m_clk_in,
+    ps2m_clk_out => ps2m_clk_out,
+    ps2m_dat_in  => ps2m_dat_in,
+    ps2m_dat_out => ps2m_dat_out,
+	
+    -- Audio
+    sigmaL => DAC_L,
+    sigmaR => DAC_R,
+    leftdatasum => leftdatasum,
+    rightdatasum => rightdatasum,
 		
-		-- Audio
-		sigmaL => DAC_L,
-		sigmaR => DAC_R,
-		leftdatasum => leftdatasum,
-		rightdatasum => rightdatasum,
+    -- Game ports
+    n_joy1 => n_joy1,
+    n_joy2 => n_joy2,		
 		
-		-- Game ports
-		n_joy1 => n_joy1,
-		n_joy2 => n_joy2,		
+    -- RS232
+    rs232_rxd => slave_rx_i,
+    rs232_txd => slave_tx_o,
 		
-		-- RS232
-		rs232_rxd => slave_rx_i,
-		rs232_txd => slave_tx_o,
+    -- ESP32 wifi modem
+    amiga_rs232_rxd => wifi_txd,
+    amiga_rs232_txd => wifi_rxd,
 		
-		-- ESP8266 wifi modem
-		amiga_rs232_rxd => wifi_txd,
-		amiga_rs232_txd => wifi_rxd,
-		
-		-- SD card interface
-		sd_cs => mmc_n_cs,
-		sd_miso => mmc_miso,
-		sd_mosi => mmc_mosi,
-		sd_clk => mmc_clk
+    -- SD card interface
+    sd_cs   => mmc_n_cs,
+    sd_miso => mmc_miso,
+    sd_mosi => mmc_mosi,
+    sd_clk  => mmc_clk
   );
 
-  emard_video: if not C_flea_av generate
+  G_spdif_out: if C_spdif generate
   S_audio(23 downto 9) <= leftdatasum(14 downto 0);
-  G_spdif_out: entity work.spdif_tx
+  E_spdif_out: entity work.spdif_tx
   generic map
   (
     C_clk_freq => 28125000,  -- Hz
@@ -462,10 +466,10 @@ begin
     data_in => S_audio,
     spdif_out => S_spdif_out
   );
+  audio_v(1 downto 0) <= (others => S_spdif_out);
+  end generate;
   audio_l(3 downto 0) <= leftdatasum(14 downto 11);
   audio_r(3 downto 0) <= rightdatasum(14 downto 11);
-  audio_v(1 downto 0) <= (others => S_spdif_out);
-
 
   vga2dvi_converter: entity work.vga2dvid
   generic map
@@ -504,7 +508,5 @@ begin
     gpdi_diff_data: OLVDS port map (A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
   end generate;
   gpdi_diff_clock: OLVDS port map (A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
-
-  end generate;
 
 end struct;
