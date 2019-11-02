@@ -32,6 +32,7 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/usb/usbhost/usbh_sie_vhdl.vhd \
 ../../../../rtl_emard/usb/usb11_phy_vhdl/usb_phy.vhd \
 ../../../../rtl_emard/usb/usb11_phy_vhdl/usb_rx_phy_48MHz.vhd \
+../../../../rtl_emard/usb/usb11_phy_vhdl/usb_rx_phy_emard.vhd \
 ../../../../rtl_emard/usb/usb11_phy_vhdl/usb_tx_phy.vhd \
 ../../../../rtl_emard/spdif/spdif_tx.vhd \
 ../../../../rtl_emard/osd/char_rom.vhd \
