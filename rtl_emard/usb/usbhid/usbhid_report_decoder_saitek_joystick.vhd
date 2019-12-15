@@ -27,7 +27,7 @@ port
 end;
 
 architecture rtl of usbhid_report_decoder is
-  signal R_hid_report: std_logic_vector(hid_report'range);
+  signal R_hid_report: std_logic_vector(hid_report'range) := x"F000208080808001"; -- C_report_length = 8
   signal R_hid_valid: std_logic;
   alias S_lstick_x: std_logic_vector(7 downto 0) is R_hid_report(15 downto 8);
   alias S_lstick_y: std_logic_vector(7 downto 0) is R_hid_report(23 downto 16);
