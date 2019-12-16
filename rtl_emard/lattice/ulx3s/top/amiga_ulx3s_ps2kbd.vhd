@@ -13,10 +13,12 @@ use ecp5u.components.all;
 
 -- package for usb joystick report decoded structure
 use work.report_decoded_pack.all;
+use work.usbh_setup_pack.all;
 
 entity amiga_ulx3s is
 generic
 (
+  C_usbhid:   boolean := false;
   C_programn: boolean := false; -- hold BTN0 to pull PROGRAMN low
   C_spdif:    boolean := false  -- SPDIF audio, may cause synthesis problems if enabled on 85F
 );
@@ -84,7 +86,7 @@ port
   gpdi_scl, gpdi_sda: inout std_logic;
 
   -- US2 port
-  usb_fpga_dp: inout std_logic;
+  usb_fpga_dp: in std_logic;
   usb_fpga_bd_dp, usb_fpga_bd_dn: inout std_logic;
   usb_fpga_pu_dp, usb_fpga_pu_dn: out std_logic;
 
@@ -135,7 +137,6 @@ architecture struct of amiga_ulx3s is
   alias mmc_clk: std_logic is sd_clk;
   alias mmc_mosi: std_logic is sd_cmd_di;
   alias mmc_miso: std_logic is sd_dat0_do;
-        
   -- END FLEA OHM ALIASING
 
   signal clk  : std_logic := '0';	
@@ -148,8 +149,8 @@ architecture struct of amiga_ulx3s is
   signal aud_r  : std_logic;  
   signal dma_1  : std_logic := '1'; 
  
-  signal n_joy1   : std_logic_vector(5 downto 0) := (others => '1');
-  signal n_joy2   : std_logic_vector(5 downto 0) := (others => '1');
+  signal n_joy1   : std_logic_vector(5 downto 0);
+  signal n_joy2   : std_logic_vector(5 downto 0);
  
   signal ps2k_clk_in : std_logic;
   signal ps2k_clk_out : std_logic;
@@ -173,7 +174,7 @@ architecture struct of amiga_ulx3s is
   signal dvi_vsync   : std_logic := '0';
   signal blank   : std_logic := '0';
   signal videoblank: std_logic;  
-  
+
   signal clk_dvi  : std_logic := '0';
   signal clk_dvin : std_logic := '0'; 
  
@@ -186,7 +187,6 @@ architecture struct of amiga_ulx3s is
   signal PLL_lock  : std_logic := '0';
   signal n_15khz   : std_logic := '1';
 
-  signal VTEMP_DAC		:std_logic_vector(4 downto 0);
   signal audio_data : std_logic_vector(17 downto 0);
   signal convert_audio_data : std_logic_vector(17 downto 0);
 
@@ -200,11 +200,11 @@ architecture struct of amiga_ulx3s is
   signal   cnt:     integer range 0 to cnt_div-1; 
   signal   ce:      std_logic;
 
-  signal   rightdatasum:	std_logic_vector(14 downto 0);
-  signal   leftdatasum:	std_logic_vector(14 downto 0);
-  signal   left_sampled:	std_logic_vector(15 downto 0);
-  signal   right_sampled:	std_logic_vector(15 downto 0);
-	 
+  signal   rightdatasum  : std_logic_vector(14 downto 0);
+  signal   leftdatasum   : std_logic_vector(14 downto 0);
+  signal   left_sampled  : std_logic_vector(15 downto 0);
+  signal   right_sampled : std_logic_vector(15 downto 0);
+
   signal   pll_locked 	: std_logic;
   signal   reset_n 	: std_logic;
   signal   reset_combo1 	: std_logic;
@@ -223,15 +223,15 @@ architecture struct of amiga_ulx3s is
   -- emard usb hid joystick
   constant C_usb_speed: std_logic := '0'; -- 0:low 1:full
   signal S_hid_reset: std_logic;
-  signal S_hid_report: std_logic_vector(63 downto 0);
+  signal S_hid_report: std_logic_vector(C_report_length*8-1 downto 0);
   signal S_hid_valid: std_logic;
   signal S_report_decoded: T_report_decoded;
   -- end emard usb hid joystick
   signal R_program: std_logic_vector(26 downto 0);
-
 begin
-  -- btn(0) has inverted logic
   wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
+  --led(0) <= btn(0); -- visual indication of btn press
+  -- btn(0) has inverted logic
   sys_reset <= btn(0);
   s_hid_reset <= not btn(0);
   sd_dat1_irq <= '1';
@@ -256,7 +256,7 @@ begin
   user_programn <= '1';
   end generate;
 
-  G_usb_hid: if false generate
+  G_yes_usb_hid: if C_usbhid generate
   usbhid_host_inst: entity usbh_host_hid
   generic map
   (
@@ -290,12 +290,12 @@ begin
     decoded => S_report_decoded
   );
 
-  process(clk7m)
+  process(clk_usb)
   begin
-    if rising_edge(clk7m) then
+    if rising_edge(clk_usb) then
       -- Joystick1 port used as mouse (right stick)
-      n_joy1(5) <= not (          S_report_decoded.btn_start);  -- fire2
-      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rstick); -- fire
+      n_joy1(5) <= not (          S_report_decoded.btn_rmouse_right);  -- fire2
+      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rmouse_left); -- fire
       n_joy1(3) <= not (S_report_decoded.rmouseq_y(0));       -- LSB quadrature y
       n_joy1(2) <= not (S_report_decoded.rmouseq_x(0));       -- LSB quadrature x
       n_joy1(1) <= not (S_report_decoded.rmouseq_y(1));       -- MSB quadrature y
@@ -312,46 +312,56 @@ begin
       n_joy2(0) <= not (btn(6) or S_report_decoded.btn_b or S_report_decoded.lstick_right);  -- right
     end if;
   end process;
-  led(6 downto 1) <= not n_joy2;
-  end generate;
+  end generate; -- G_yes_usb_hid
 
-  use_onboard_btns: if true generate
-  process(clk7m)
+  G_not_usb_hid: if not C_usbhid generate
+  usb_fpga_pu_dp <= '1';
+  usb_fpga_pu_dn <= '1';
+  process(clk_usb)
   begin
-    if rising_edge(clk7m) then
-      -- inverted logic: joystick switches pull down when pressed
-      n_joy1(5) <= '1';
-      n_joy1(4) <= not btn(1); -- mouse click
-      n_joy1(3) <= '1';
-      n_joy1(2) <= '1';
-      n_joy1(1) <= '1';
-      n_joy1(0) <= '1';
+    if rising_edge(clk_usb) then
+      -- Joystick1 port used as mouse (right stick)
+      n_joy1(5) <= not ('0');    -- fire2
+      n_joy1(4) <= not (btn(1)); -- fire
+      n_joy1(3) <= not ('0');    -- LSB quadrature y
+      n_joy1(2) <= not ('0');    -- LSB quadrature x
+      n_joy1(1) <= not ('0');    -- MSB quadrature y
+      n_joy1(0) <= not ('0');    -- MSB quadrature x
 
-      n_joy2(5) <= not btn(1); -- fire2
-      n_joy2(4) <= not btn(2); -- fire
-      n_joy2(3) <= not btn(3); -- up
-      n_joy2(2) <= not btn(4); -- down
-      n_joy2(1) <= not btn(5); -- left
-      n_joy2(0) <= not btn(6); -- right
+      -- Joystick2 port used as joystick
+      -- Joystick2 bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
+      -- inverted logic: joystick switches pull down when pressed
+      n_joy2(5) <= not ('0');    -- fire2
+      n_joy2(4) <= not (btn(2)); -- fire
+      n_joy2(3) <= not (btn(3)); -- up
+      n_joy2(2) <= not (btn(4)); -- down
+      n_joy2(1) <= not (btn(5)); -- left
+      n_joy2(0) <= not (btn(6)); -- right
     end if;
   end process;
-  led(5 downto 0) <= not n_joy2(5 downto 0);
-  end generate;
+  end generate; -- G_not_usb_hid
 
-  -- Video output horizontal scanrate select 15/30kHz select via GPIO header
-  -- n_15khz <= GP(21) ; -- Default is 30kHz video out if pin left unconnected. Connect to GND for 15kHz video.
-  --n_15khz <= sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
-  n_15khz <= '1'; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
+  led(0) <= not n_joy2(0); -- red
+  led(3) <= not n_joy2(1); -- blue
+  led(2) <= not n_joy2(2); -- green
+  led(1) <= not n_joy2(3); -- orange
+  led(4) <= not n_joy2(4); -- red
+  led(5) <= not n_joy2(5); -- orange
+
+  -- Video output horizontal scanrate select 15/30kHz select
+  n_15khz <= '1'; -- sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
 
   -- PS/2 Keyboard and Mouse definitions
-  ps2k_dat_in <= PS2_data1;
+  ps2k_dat_in<=PS2_data1;
   PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
-  ps2k_clk_in <= PS2_clk1;
+  ps2k_clk_in<=PS2_clk1;
   PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
+--  usb_fpga_pu_dp <= '1';
+--  usb_fpga_pu_dn <= '1';
 
-  ps2m_dat_in <= PS2_data2;
+  ps2m_dat_in<=PS2_data2;
   PS2_data2 <= '0' when ps2m_dat_out='0' else 'Z';
-  ps2m_clk_in <= PS2_clk2;
+  ps2m_clk_in<=PS2_clk2;
   PS2_clk2 <= '0' when ps2m_clk_out='0' else 'Z';	 
 
   clk0 : entity work.clk_minimig_vhdl
@@ -365,24 +375,44 @@ begin
     locked  => pll_locked
   );
 
+  G_clk_usb_low: if C_usb_speed = '0' generate
   clk1 : entity work.clk_ramusb_vhdl
   port map
   (
     clkin          => sys_clock,
     clk_112        => open,
     clk_112_120deg => sdram_clk,
-    clk_6	   => open    -- 6.05 MHz (ideal would be 6 MHz)
+    clk_6          => clk_usb    -- 6.05 MHz (ideal would be 6 MHz)
   );
+  end generate;
+
+  G_clk_usb_high: if C_usb_speed = '1' generate
+    clk1 : entity work.clk_ramusb_vhdl
+    port map
+    (
+      clkin          => sys_clock,
+      clk_112        => open,
+      clk_112_120deg =>	sdram_clk,
+      clk_6	     => open       -- 6.05 MHz
+    );
+    clk2 : entity work.clk_usb_vhdl
+    port map
+    (
+      clkin  => sys_clock,
+      clk_48 => clk_usb,
+      clk_6  => open
+    );
+  end generate;
 
   reset_combo1 <= sys_reset and pll_locked;
 
-  u10 : entity work.poweronreset
+  E_power_on_reset : entity work.poweronreset
   port map( 
     clk => clk,
     reset_button => reset_combo1,
     reset_out => reset_n
-  );		
-		
+  );
+
   led(7) <= not diskoff;
 
   myFampiga: entity work.Fampiga
@@ -392,41 +422,40 @@ begin
     clk7m   => clk7m,
     clk28m  => clk28m,
     reset_n => reset_n,--GPIO_wordin(0),--reset_n,
-
     --powerled_out=>power_led(5 downto 4),
-    diskled_out => diskoff,
+    diskled_out=>diskoff,
     --oddled_out=>odd_led(5), 
 
     -- SDRAM.  A separate shifted clock is provided by the toplevel
     sdr_addr => sdram_a,
     sdr_data => sdram_d,
-    sdr_ba   => sdram_ba,
-    sdr_cke  => sdram_cke,
-    sdr_dqm  => sdram_dqm,
-    sdr_cs   => sdram_csn,
-    sdr_we   => sdram_wen,
-    sdr_cas  => sdram_casn, 
-    sdr_ras  => sdram_rasn,
+    sdr_ba => sdram_ba,
+    sdr_cke => sdram_cke,
+    sdr_dqm => sdram_dqm,
+    sdr_cs => sdram_csn,
+    sdr_we => sdram_wen,
+    sdr_cas => sdram_casn,
+    sdr_ras => sdram_rasn,
 	 
     -- VGA 
-    vga_r     => red_u,
-    vga_g     => green_u,
-    vga_b     => blue_u,
+    vga_r => red_u,
+    vga_g => green_u,
+    vga_b => blue_u,
     vid_blank => videoblank,
     vga_hsync => hsync,
     vga_vsync => vsync,
-    n_15khz   => n_15khz,
+    n_15khz => n_15khz,
 
     -- PS/2
-    ps2k_clk_in  => ps2k_clk_in,
+    ps2k_clk_in => ps2k_clk_in,
     ps2k_clk_out => ps2k_clk_out,
-    ps2k_dat_in  => ps2k_dat_in,
+    ps2k_dat_in => ps2k_dat_in,
     ps2k_dat_out => ps2k_dat_out,
-    ps2m_clk_in  => ps2m_clk_in,
+    ps2m_clk_in => ps2m_clk_in,
     ps2m_clk_out => ps2m_clk_out,
-    ps2m_dat_in  => ps2m_dat_in,
+    ps2m_dat_in => ps2m_dat_in,
     ps2m_dat_out => ps2m_dat_out,
-	
+
     -- Audio
     sigmaL => DAC_L,
     sigmaR => DAC_R,
@@ -446,10 +475,10 @@ begin
     amiga_rs232_txd => wifi_rxd,
 		
     -- SD card interface
-    sd_cs   => mmc_n_cs,
+    sd_cs => mmc_n_cs,
     sd_miso => mmc_miso,
     sd_mosi => mmc_mosi,
-    sd_clk  => mmc_clk
+    sd_clk => mmc_clk
   );
 
   G_spdif_out: if C_spdif generate
