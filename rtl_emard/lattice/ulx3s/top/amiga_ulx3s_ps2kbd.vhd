@@ -228,6 +228,11 @@ architecture struct of amiga_ulx3s is
   signal S_report_decoded: T_report_decoded;
   -- end emard usb hid joystick
   signal R_program: std_logic_vector(26 downto 0);
+
+  component ODDRX1F
+    port (D0, D1, SCLK, RST: in std_logic; Q: out std_logic);
+  end component;
+
 begin
   wifi_gpio0 <= btn(0); -- holding reset for 2 sec will activate ESP32 loader
   --led(0) <= btn(0); -- visual indication of btn press
