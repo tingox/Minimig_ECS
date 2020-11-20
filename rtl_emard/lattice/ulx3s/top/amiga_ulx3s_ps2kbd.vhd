@@ -538,9 +538,9 @@ begin
   ddr_blue:  ODDRX1F port map (D0=>dvid_blue(0),  D1=>dvid_blue(1),  Q=>ddr_d(0), SCLK=>clk_pixel_shift, RST=>'0');
   ddr_clock: ODDRX1F port map (D0=>dvid_clock(0), D1=>dvid_clock(1), Q=>ddr_clk,  SCLK=>clk_pixel_shift, RST=>'0');
   -- vendor specific modules for differential output
-  gpdi_data_channels: for i in 0 to 2 generate
-    gpdi_diff_data: OLVDS port map (A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
-  end generate;
-  gpdi_diff_clock: OLVDS port map (A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
+--  gpdi_data_channels: for i in 0 to 2 generate
+--    gpdi_diff_data: OLVDS port map (A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
+--  end generate;
+--  gpdi_diff_clock: OLVDS port map (A => ddr_clk, Z => gpdi_clkp, ZN => gpdi_clkn);
 
 end struct;
