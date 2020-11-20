@@ -48,10 +48,10 @@ endif
 FPGA_CHIP_EQUIVALENT ?= lfe5u-$(FPGA_K)f
 
 # open source synthesis tools
-ECPPLL ?= $(TRELLIS)/libtrellis/ecppll
-ECPPACK ?= $(TRELLIS)/libtrellis/ecppack
-TRELLISDB ?= $(TRELLIS)/database
-LIBTRELLIS ?= $(TRELLIS)/libtrellis
+ECPPLL ?= ecppll
+ECPPACK ?= ecppack
+#TRELLISDB ?= $(TRELLIS)/database
+#LIBTRELLIS ?= $(TRELLIS)/libtrellis
 BIT2SVF ?= $(TRELLIS)/tools/bit_to_svf.py
 #BASECFG ?= $(TRELLIS)/misc/basecfgs/empty_$(FPGA_CHIP_EQUIVALENT).config
 # yosys options, sometimes those can be used: -noccu2 -nomux -nodram
@@ -86,7 +86,7 @@ TINYFPGASP ?= tinyfpgasp
 FLEAFPGA_JTAG ?= FleaFPGA-JTAG 
 OPENOCD ?= openocd
 OPENOCD_INTERFACE ?= $(SCRIPTS)/ft231x.ocd
-UJPROG ?= ujprog
+UJPROG ?= fujprog
 
 # helper scripts directory
 SCRIPTS ?= scripts
