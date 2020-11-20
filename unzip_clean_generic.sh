@@ -10,3 +10,6 @@ rm -rf source/TG68_old
 cd ../..
 rtl_emard/tools/jbboot_bin2vhdl.py Minimig_ECS/BOOTROM1/amigaboot.bin jbboot.vhd
 rtl_emard/tools/osdbootstrap_bin2vhdl.py Minimig_ECS/BOOTROM1/osdload.bin osd_bootstrap.vhd
+# patch Debounce.vhd
+mv Minimig_ECS/impl1/source/Debounce.vhd Minimig_ECS/impl1/source/Debounce.vhd_org
+sed -e "s/default/default_value/g" Minimig_ECS/impl1/source/Debounce.vhd_org > Minimig_ECS/impl1/source/Debounce.vhd
