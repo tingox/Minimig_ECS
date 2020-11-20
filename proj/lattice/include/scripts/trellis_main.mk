@@ -116,11 +116,12 @@ all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
 #$(PROJECT).json: $(PROJECT).ys $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)
 #	$(YOSYS) $(PROJECT).ys
 
-$(PROJECT).json: $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)
+$(PROJECT).json: $(VERILOG_FILES) $(VHDL_FILES)
 	$(YOSYS) \
+        -p "ghdl --std=08 --ieee=standard -fsynopsys -frelaxed ${VHDL_FILES} -e amiga_ulx3s" \
+        -p "read verilog -sv ${VERILOG_FILES}" \
 	-p "hierarchy -top ${TOP_MODULE}" \
-	-p "synth_ecp5 ${YOSYS_OPTIONS} -json ${PROJECT}.json" \
-	$(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)
+	-p "synth_ecp5 ${YOSYS_OPTIONS} -json ${PROJECT}.json"
 
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config: $(PROJECT).json $(BASECFG)
 	$(NEXTPNR-ECP5) $(NEXTPNR_OPTIONS) --$(FPGA_K)k --package $(FPGA_PACKAGE) --json $(PROJECT).json --lpf $(CONSTRAINTS) --textcfg $@
