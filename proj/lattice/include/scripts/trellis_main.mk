@@ -100,10 +100,10 @@ all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
 
 # VHDL to VERILOG conversion
 # convert all *.vhd filenames to .v extension
-VHDL_TO_VERILOG_FILES = $(VHDL_FILES:.vhd=.v)
+#VHDL_TO_VERILOG_FILES = $(VHDL_FILES:.vhd=.v)
 # implicit conversion rule
-%.v: %.vhd
-	$(VHDL2VL) $< $@
+#%.v: %.vhd
+#	$(VHDL2VL) $< $@
 
 #*.v: *.vhdl
 #	$(VHDL2VL) $< $@
