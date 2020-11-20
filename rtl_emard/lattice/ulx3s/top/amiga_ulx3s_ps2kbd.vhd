@@ -256,63 +256,63 @@ begin
   user_programn <= '1';
   end generate;
 
-  G_yes_usb_hid: if C_usbhid generate
-  usbhid_host_inst: entity usbh_host_hid
-  generic map
-  (
-    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
-  )
-  port map
-  (
-    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-    bus_reset => S_hid_reset,
-    usb_dif => usb_fpga_dp,
-    usb_dp => usb_fpga_bd_dp,
-    usb_dn => usb_fpga_bd_dn,
-    hid_report => S_hid_report,
-    hid_valid => S_hid_valid
-  );
-  usb_fpga_pu_dp <= '0';
-  usb_fpga_pu_dn <= '0';
+--  G_yes_usb_hid: if C_usbhid generate
+--  usbhid_host_inst: entity usbh_host_hid
+--  generic map
+--  (
+--    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
+--  )
+--  port map
+--  (
+--    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+--    bus_reset => S_hid_reset,
+--    usb_dif => usb_fpga_dp,
+--    usb_dp => usb_fpga_bd_dp,
+--    usb_dn => usb_fpga_bd_dn,
+--    hid_report => S_hid_report,
+--    hid_valid => S_hid_valid
+--  );
+--  usb_fpga_pu_dp <= '0';
+--  usb_fpga_pu_dn <= '0';
 
-  usbhid_report_decoder_inst: entity usbhid_report_decoder
-  generic map
-  (
-    C_rmouse => true, -- right stick to mouse quadrature encoder
-    C_rmousex_scaler => 23, -- less -> faster mouse
-    C_rmousey_scaler => 23  -- less -> faster mouse
-  )
-  port map
-  (
-    clk => clk_usb,
-    hid_report => S_hid_report,
-    hid_valid => S_hid_valid,
-    decoded => S_report_decoded
-  );
+--  usbhid_report_decoder_inst: entity usbhid_report_decoder
+--  generic map
+--  (
+--    C_rmouse => true, -- right stick to mouse quadrature encoder
+--    C_rmousex_scaler => 23, -- less -> faster mouse
+--    C_rmousey_scaler => 23  -- less -> faster mouse
+--  )
+--  port map
+--  (
+--    clk => clk_usb,
+--    hid_report => S_hid_report,
+--    hid_valid => S_hid_valid,
+--    decoded => S_report_decoded
+--  );
 
-  process(clk_usb)
-  begin
-    if rising_edge(clk_usb) then
+--  process(clk_usb)
+--  begin
+--    if rising_edge(clk_usb) then
       -- Joystick1 port used as mouse (right stick)
-      n_joy1(5) <= not (          S_report_decoded.btn_rmouse_right);  -- fire2
-      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rmouse_left); -- fire
-      n_joy1(3) <= not (S_report_decoded.rmouseq_y(0));       -- LSB quadrature y
-      n_joy1(2) <= not (S_report_decoded.rmouseq_x(0));       -- LSB quadrature x
-      n_joy1(1) <= not (S_report_decoded.rmouseq_y(1));       -- MSB quadrature y
-      n_joy1(0) <= not (S_report_decoded.rmouseq_x(1));       -- MSB quadrature x
+--      n_joy1(5) <= not (          S_report_decoded.btn_rmouse_right);  -- fire2
+--      n_joy1(4) <= not (btn(1) or S_report_decoded.btn_rmouse_left); -- fire
+--      n_joy1(3) <= not (S_report_decoded.rmouseq_y(0));       -- LSB quadrature y
+--      n_joy1(2) <= not (S_report_decoded.rmouseq_x(0));       -- LSB quadrature x
+--      n_joy1(1) <= not (S_report_decoded.rmouseq_y(1));       -- MSB quadrature y
+--      n_joy1(0) <= not (S_report_decoded.rmouseq_x(1));       -- MSB quadrature x
 
       -- Joystick2 port used as joystick (left stick, keys abxy, right trigger/bumper)
       -- Joystick2 bits(5-0) = fire2,fire,right,left,down,up mapped to GPIO header
       -- inverted logic: joystick switches pull down when pressed
-      n_joy2(5) <= not (          S_report_decoded.btn_rbumper);  -- fire2
-      n_joy2(4) <= not (btn(2) or S_report_decoded.btn_rtrigger or S_report_decoded.btn_back); -- fire
-      n_joy2(3) <= not (btn(3) or S_report_decoded.btn_y or S_report_decoded.lstick_up   );     -- up
-      n_joy2(2) <= not (btn(4) or S_report_decoded.btn_a or S_report_decoded.lstick_down );   -- down
-      n_joy2(1) <= not (btn(5) or S_report_decoded.btn_x or S_report_decoded.lstick_left );   -- left
-      n_joy2(0) <= not (btn(6) or S_report_decoded.btn_b or S_report_decoded.lstick_right);  -- right
-    end if;
-  end process;
-  end generate; -- G_yes_usb_hid
+--      n_joy2(5) <= not (          S_report_decoded.btn_rbumper);  -- fire2
+--      n_joy2(4) <= not (btn(2) or S_report_decoded.btn_rtrigger or S_report_decoded.btn_back); -- fire
+--      n_joy2(3) <= not (btn(3) or S_report_decoded.btn_y or S_report_decoded.lstick_up   );     -- up
+--      n_joy2(2) <= not (btn(4) or S_report_decoded.btn_a or S_report_decoded.lstick_down );   -- down
+--      n_joy2(1) <= not (btn(5) or S_report_decoded.btn_x or S_report_decoded.lstick_left );   -- left
+--      n_joy2(0) <= not (btn(6) or S_report_decoded.btn_b or S_report_decoded.lstick_right);  -- right
+--    end if;
+--  end process;
+--  end generate; -- G_yes_usb_hid
 
   G_not_usb_hid: if not C_usbhid generate
   usb_fpga_pu_dp <= '1';
