@@ -56,4 +56,4 @@ STRATEGY = ../../../../Minimig_ECS/Minimig1.sty
 SCRIPTS = ../../include/scripts
 include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/diamond_path.mk
-include $(SCRIPTS)/diamond_main.mk
+include $(SCRIPTS)/trellis_main.mk
