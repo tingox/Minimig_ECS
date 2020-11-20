@@ -8,8 +8,8 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.ALL;
 use IEEE.numeric_std.all;
 
-library ecp5u;
-use ecp5u.components.all;
+-- library ecp5u;
+-- use ecp5u.components.all;
 
 -- package for usb joystick report decoded structure
 use work.report_decoded_pack.all;
