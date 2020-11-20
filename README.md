@@ -1,5 +1,7 @@
 # Port of Amiga emulator "Minimig"
 
+Just trying to see if I can make this build for ulx3s board using the open source toolchain (yosys, nextpnr-ecp5, etc.)
+
 Started from Minimig_ECS for Fleasystems "Ohm" board
 and making it more portable to work on Altera, Lattice
 and Xilinx. Also used to test compatibility of various
