@@ -6,9 +6,9 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../source_emard/cfide.vhd \
 ../../../../Minimig_ECS/impl1/source/Debounce.vhd \
 ../../../../Minimig_ECS/impl1/source/TG68K.vhd \
-../../../../Minimig_ECS/impl1/source/TG68K_ALU.vhd \
-../../../../Minimig_ECS/impl1/source/TG68K_Pack.vhd \
-../../../../Minimig_ECS/impl1/source/TG68KdotC_Kernel.vhd \
+../../../../rtl_tg68k/TG68K_ALU.vhd \
+../../../../rtl_tg68k/TG68K_Pack.vhd \
+../../../../rtl_tg68k/TG68KdotC_Kernel.vhd \
 ../../../../Minimig_ECS/impl1/source/HDMI/aux_ecc1.vhd \
 ../../../../Minimig_ECS/impl1/source/HDMI/aux_ecc2.vhd \
 ../../../../Minimig_ECS/impl1/source/HDMI/aux_encoder.vhd \
