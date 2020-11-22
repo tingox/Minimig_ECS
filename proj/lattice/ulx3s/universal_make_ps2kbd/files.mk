@@ -2,7 +2,7 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK0_NAME)_vhdl.vhd \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK1_NAME)_vhdl.vhd \
 ../../../../rtl_emard/lattice/ulx3s/clocks/$(CLK2_NAME)_vhdl.vhd \
-../../../..source_tingox/Fampiga.vhd \
+../../../../source_tingox/Fampiga.vhd \
 ../../../../source_emard/cfide.vhd \
 ../../../../Minimig_ECS/impl1/source/Debounce.vhd \
 ../../../../source_tingox/TG68K.vhd \
