@@ -180,6 +180,7 @@ architecture struct of amiga_ulx3s is
  
   signal temp_we : std_logic := '0';
   signal diskoff : std_logic;
+  signal power_led : std_logic_vector(1 downto 0);
 	
   signal pwm_accumulator : std_logic_vector(8 downto 0);
 	
@@ -427,9 +428,9 @@ begin
     clk7m   => clk7m,
     clk28m  => clk28m,
     reset_n => reset_n,--GPIO_wordin(0),--reset_n,
-    powerled_out=>led(5 downto 4),
+    powerled_out=>power_led(1 downto 0),
     diskled_out=>diskoff,
-    oddled_out=>odd_led(5), 
+    oddled_out=>led(3), 
 
     -- SDRAM.  A separate shifted clock is provided by the toplevel
     sdr_addr => sdram_a,
