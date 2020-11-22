@@ -446,7 +446,7 @@ begin
     vga_r => red_u,
     vga_g => green_u,
     vga_b => blue_u,
-    vid_blank => videoblank,
+--    vid_blank => videoblank,
     vga_hsync => hsync,
     vga_vsync => vsync,
     n_15khz => n_15khz,
@@ -476,8 +476,8 @@ begin
     rs232_txd => slave_tx_o,
 		
     -- ESP32 wifi modem
-    amiga_rs232_rxd => wifi_txd,
-    amiga_rs232_txd => wifi_rxd,
+--    amiga_rs232_rxd => wifi_txd,
+--    amiga_rs232_txd => wifi_rxd,
 		
     -- SD card interface
     sd_cs => mmc_n_cs,
