@@ -427,9 +427,9 @@ begin
     clk7m   => clk7m,
     clk28m  => clk28m,
     reset_n => reset_n,--GPIO_wordin(0),--reset_n,
-    --powerled_out=>power_led(5 downto 4),
+    powerled_out=>led(5 downto 4),
     diskled_out=>diskoff,
-    --oddled_out=>odd_led(5), 
+    oddled_out=>odd_led(5), 
 
     -- SDRAM.  A separate shifted clock is provided by the toplevel
     sdr_addr => sdram_a,
