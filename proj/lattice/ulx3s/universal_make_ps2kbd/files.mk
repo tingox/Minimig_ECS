@@ -5,7 +5,7 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
 ../../../../Minimig_ECS/impl1/source/Fampiga.vhd \
 ../../../../source_emard/cfide.vhd \
 ../../../../Minimig_ECS/impl1/source/Debounce.vhd \
-../../../../Minimig_ECS/impl1/source/TG68K.vhd \
+../../../../source_tingox/TG68K.vhd \
 ../../../../rtl_tg68k/TG68K_ALU.vhd \
 ../../../../rtl_tg68k/TG68K_Pack.vhd \
 ../../../../rtl_tg68k/TG68KdotC_Kernel.vhd \
