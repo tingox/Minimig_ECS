@@ -350,8 +350,8 @@ begin
   led(3) <= not n_joy2(1); -- blue
   led(2) <= not n_joy2(2); -- green
   led(1) <= not n_joy2(3); -- orange
-  led(4) <= not n_joy2(4); -- red
-  led(5) <= not n_joy2(5); -- orange
+--  led(4) <= not n_joy2(4); -- red
+--  led(5) <= not n_joy2(5); -- orange
 
   -- Video output horizontal scanrate select 15/30kHz select
   n_15khz <= '1'; -- sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
