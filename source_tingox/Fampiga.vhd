@@ -361,7 +361,7 @@ MainCPU: entity work.TG68K
       ramready => cpu_ena,	-- dtack equivalent for fastram access 
       cpu => cpu_config,
 --	  fastramcfg => fastramcfg,
-	  turbochipram => turbochipram,
+--	  turbochipram => turbochipram,
       ramaddr => cpu_ramaddr,
       cpustate => cpustate,
 
