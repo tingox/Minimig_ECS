@@ -9,30 +9,34 @@ port(
 		clk7m : in std_logic;
 		clk28m : in std_logic;
 		reset_n : in std_logic;
-		powerled_out : out std_ulogic_vector (1 downto 0);
+		powerled_out : out unsigned (1 downto 0);
 		diskled_out : out std_logic;	-- Use for SD access
 		oddled_out : out std_logic; -- Use for floppy access
 
 		-- SDRAM.  A separate shifted clock is provided by the toplevel
-		sdr_addr : out std_logic_vector(11 downto 0);
+		sdr_addr : out std_logic_vector(12 downto 0);
 		sdr_data : inout std_logic_vector(15 downto 0);
 		sdr_ba : out std_logic_vector(1 downto 0);
 		sdr_cke : out std_logic;
 		sdr_dqm : out std_logic_vector(1 downto 0);
 		sdr_cs : out std_logic;
 		sdr_we : out std_logic;
-		sdr_cas : out std_logic;
-		sdr_ras : out std_logic;
+		sdr_cas : out std_logic; 
+		sdr_ras : out std_logic; 
+		
+		-- Game ports
+		n_joy1 : in std_logic_vector(5 downto 0);
+		n_joy2 : in std_logic_vector(5 downto 0);
 	
 		-- VGA
-		vga_r		: out std_logic_vector(7 downto 0);
-		vga_g 	: out std_logic_vector(7 downto 0);
-		vga_b 	: out std_logic_vector(7 downto 0);
-
-		vga_hsync 	: buffer std_logic;
-		vga_vsync 	: buffer std_logic;
-		n_15khz		: out std_logic;
-
+		vga_r		: out std_logic_vector(3 downto 0);
+		vga_g 	: out std_logic_vector(3 downto 0);
+		vga_b 	: out std_logic_vector(3 downto 0);
+		vid_blank 	: out std_logic;
+		vga_hsync 	: out std_logic;
+		vga_vsync 	: out std_logic;
+		n_15khz 	: in std_logic;
+ 
 		-- PS/2
 		ps2k_clk_in : inout std_logic;
 		ps2k_clk_out : inout std_logic;
@@ -44,15 +48,21 @@ port(
 		ps2m_dat_out : inout std_logic;
 		
 		-- Audio
-		aud_l : out std_logic;
-		aud_r : out std_logic;
+		sigmaL : out std_logic;
+		sigmaR : out std_logic;
+		leftdatasum : out std_logic_vector(14 downto 0);
+		rightdatasum : out std_logic_vector(14 downto 0);
 		
 		-- RS232
 		rs232_rxd : in std_logic;
 		rs232_txd : out std_logic;
+		
+		-- ESP8266 wifi modem
+		amiga_rs232_rxd : in std_logic;
+		amiga_rs232_txd : out std_logic;
 
 		-- SD card interface
-		sd_cs : out std_logic;
+		sd_cs : out std_logic; 
 		sd_miso : in std_logic;
 		sd_mosi : out std_logic;
 		sd_clk : out std_logic
@@ -76,7 +86,7 @@ signal n_cpu_lds : std_logic;
 signal cpu_r_w : std_logic;
 signal n_cpu_dtack : std_logic;
 signal n_cpu_reset : std_logic;
-
+ 
 		-- SDRAM
 		
 signal mm_ram_data_out : std_logic_vector(15 downto 0);
@@ -110,7 +120,7 @@ signal cpu_ram_lds : std_logic;
 signal cpu_ram_uds : std_logic;
 
 -- OSD CPU signals
-
+signal scandoubler : std_logic;
 signal hostWR : std_logic_vector(15 downto 0);
 signal hostAddr : std_logic_vector(23 downto 0);
 signal hostState : std_logic_vector(2 downto 0);
@@ -120,6 +130,9 @@ signal hostRD : std_logic_vector(15 downto 0);
 signal hostena	: std_logic;
 signal hostena_in	: std_logic;
 signal hostdata : std_logic_vector(15 downto 0);
+
+signal dummy1 : std_logic_vector(2 downto 0);
+signal dummy2 : std_logic_vector(7 downto 0);
 
 COMPONENT Minimig1
 	GENERIC ( NTSC : integer := 0 );
@@ -167,15 +180,18 @@ COMPONENT Minimig1
 		sck		:	 IN STD_LOGIC;
 		n_hsync		:	 OUT STD_LOGIC;
 		n_vsync		:	 OUT STD_LOGIC;
+		video_blank		:	 OUT STD_LOGIC;
 		red		:	 OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
 		green		:	 OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
 		blue		:	 OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-		aud_l		:	 OUT STD_LOGIC;
-		aud_r		:	 OUT STD_LOGIC;
+		leftdatasum		:	 OUT STD_LOGIC_VECTOR(14 DOWNTO 0);
+		rightdatasum	:	 OUT STD_LOGIC_VECTOR(14 DOWNTO 0);
+		left : OUT STD_LOGIC;
+		right : OUT STD_LOGIC;
 		cpu_config		:	 OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
 		memcfg		:	 OUT STD_LOGIC_VECTOR(5 DOWNTO 0);
 		drv_snd		:	 OUT STD_LOGIC;
-		floppyled		:	 OUT STD_LOGIC;
+		floppyled		:	 OUT STD_LOGIC; 
 		init_b		:	 OUT STD_LOGIC;
 		ramdata_in		:	 IN STD_LOGIC_VECTOR(15 DOWNTO 0);
 		cpurst		:	 IN STD_LOGIC;
@@ -193,13 +209,19 @@ signal spi_chipselect : std_logic_vector(7 downto 0);
 signal spi_sdi : std_logic;
 signal spi_sdo : std_logic;
 signal spi_sck : std_logic;
-
+signal sysreset : std_logic;
+signal clk_enablez : std_logic;
+signal ramm_address : std_logic_vector(23 downto 1);
 -- Misc
+
+signal fastramcfg : std_logic_vector(2 downto 0);
+signal turbochipram : std_logic;
 
 signal powerled : std_logic;
 signal sdled : std_logic;
 signal floppyled : std_logic;
-
+signal cpu_reset1 : std_logic;
+ 
 begin
 	sdr_cke<='1';
 	powerled_out<=powerled & '1';
@@ -214,7 +236,7 @@ begin
 MyMinimig: COMPONENT Minimig1
 	generic map
 	(
-		NTSC => 0
+		NTSC => 0 
 	)
 	port map
 	(
@@ -247,15 +269,15 @@ MyMinimig: COMPONENT Minimig1
 		
 		-- Peripherals
 		
---		rxd => rs232_rxd,
---		txd => rs232_txd,
-		rxd => '1',
-		txd => open,
+		rxd => amiga_rs232_rxd,
+		txd => amiga_rs232_txd,
+		--rxd => '1',
+		--txd => open,
 		cts => '0',
 		rts => open,
-		n_joy1	=> "111111",
-		n_joy2 => "111111",
-		n_15khz => '1',
+		n_joy1	=> n_joy1,
+		n_joy2 => n_joy2,
+		n_15khz => n_15khz,
 		pwrled => powerled,
 		kbddat => ps2k_dat_in,
 		kbdclk => ps2k_clk_in,
@@ -275,31 +297,39 @@ MyMinimig: COMPONENT Minimig1
 		
 		n_hsync => vga_hsync,
 		n_vsync => vga_vsync,
-		red => vga_r(7 downto 4),
-		green => vga_g(7 downto 4),
-		blue => vga_b(7 downto 4),
+		video_blank => vid_blank,
+		red => vga_r,
+		green => vga_g,
+		blue => vga_b, 
 		
-		aud_l => aud_l,
-		aud_r => aud_r,
+		-- Audio
+		 left => sigmaL,
+		 right => sigmaR,		
+		leftdatasum => leftdatasum,
+		rightdatasum => rightdatasum,
+		
 		cpu_config => cpu_config,
-		memcfg => mem_config,
+		memcfg => mem_config, 
 		drv_snd => open,
 		floppyled => oddled_out,
 		init_b => open,
 		ramdata_in => mm_ram_data_in,
-		cpurst => not (maincpuready and n_cpu_reset and sdram_ready),
+		cpurst => cpu_reset1,
 		locked => sdram_ready,
 		sysclock => clk,
 		ascancode => "100000000",
 		n_joy3 => "111111",
 		n_joy4	=> "111111"
 	);
-		
+	
+	cpu_reset1 <= not (maincpuready and n_cpu_reset and sdram_ready);
+	sysreset <= n_cpu_reset and sdram_ready;
+	 
 MainCPU: entity work.TG68K
    port map
 	(        
 		clk => clk,
-		reset => n_cpu_reset and sdram_ready,
+		reset => sysreset,
 		clkena_in => '1',
 		  
 	  -- Standard MC68000 signals...
@@ -309,7 +339,7 @@ MainCPU: entity work.TG68K
 
 		vpa => '1',
 		ein => '1',
-		
+		 
 		addr => cpu_address,
 		data_read => cpu_data_in,
 		data_write => cpu_data_out,
@@ -317,8 +347,8 @@ MainCPU: entity work.TG68K
 		uds => n_cpu_uds,
 		lds => n_cpu_lds,
 		rw => cpu_r_w,
-		e => open,
-		vma => open,
+		--e => open,
+		--vma => open,
 
 		  -- TG68 specific signals...
 		  
@@ -330,28 +360,31 @@ MainCPU: entity work.TG68K
       fromram => cpu_data_from_ram,
       ramready => cpu_ena,	-- dtack equivalent for fastram access 
       cpu => cpu_config,
-      memcfg => mem_config,
+	  fastramcfg => fastramcfg,
+	  turbochipram => turbochipram,
       ramaddr => cpu_ramaddr,
       cpustate => cpustate,
 
 		nResetOut => maincpuready,
-      skipFetch => open,
+      --skipFetch => open,
       cpuDMA => cpu_dma,
       ramlds => cpu_ram_lds,
       ramuds => cpu_ram_uds
 	);
 
+ ramm_address <= "00"&mm_ram_address;
+ 
 mysdram : entity work.sdram
 	port map
-	(
+	( 
 		sdata => sdr_data,
-		sdaddr(11 downto 0) => sdr_addr,
+		sdaddr => sdr_addr,
 		dqm => sdr_dqm,
 		sd_cs(0)	=> sdr_cs,
-		sd_cs(3 downto 1) => open,
-		ba => sdr_ba,
+		sd_cs(3 downto 1) => dummy1,  	
+		ba => sdr_ba, 
 		sd_we => sdr_we,
-		sd_ras => sdr_ras,
+		sd_ras => sdr_ras, 
 		sd_cas => sdr_cas,
 
 		sysclk => clk,
@@ -375,7 +408,7 @@ mysdram : entity work.sdram
 		cpuena => cpu_ena,
 		
 		chipWR => mm_ram_data_out,
-		chipAddr => "00"&mm_ram_address,
+		chipAddr => ramm_address,
 		chipU => mm_ram_bhe,
 		chipL	=> mm_ram_ble,
 		chipRW => mm_ram_we,
@@ -385,7 +418,7 @@ mysdram : entity work.sdram
 		c_7m => clk7m,
 
 		reset_out => sdram_ready,
-		enaRDreg => open,
+		--enaRDreg => open,
 		enaWRreg	=> enaWRreg,
 		ena7RDreg => ena7RDreg,
 		ena7WRreg => ena7WRreg
@@ -403,7 +436,10 @@ mycfide : entity work.cfide
 		lds => hostL,
 		uds => hostU,
 		sd_di => spi_sdo,
-		
+		 
+		fastramsize => fastramcfg,
+		turbochipram => turbochipram,
+		scandoubler => scandoubler, 
 		memce => hostState(2),
 		cpudata => hostdata,
 		cpuena => hostena,	-- And with enaWRreg as host clkena_in
@@ -415,24 +451,25 @@ mycfide : entity work.cfide
 		debugTxD => rs232_txd,
 		debugRxD => rs232_rxd
    );
-
+   
+clk_enablez <= hostena and enaWRreg;
 myhostcpu : entity work.TG68KdotC_Kernel
    port map(clk => clk,
 		nReset => sdram_ready,
-		clkena_in => hostena and enaWRreg,
+		clkena_in => clk_enablez,
 		data_in => hostdata,
-		addr(23 downto 0) => hostaddr,
-		addr(31 downto 24) => open,
+		addr(23 downto 0) => hostaddr, 
+		addr(31 downto 24) => dummy2,
 		data_write => hostWR,
 		nWr => open, -- uses busstate instead?
 		nUDS => hostU,
 		nLDS => hostL,
-		busstate	=> hostState(1 downto 0),
-		nResetOut => open,
-		FC => open,
+		busstate	=> hostState(1 downto 0)
+		--nResetOut => open,
+		--FC => open,
 -- for debug		
-		skipFetch => open,
-		regin => open
+		--skipFetch => open,
+		--regin => open
 	);
 	
 end rtl;
