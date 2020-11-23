@@ -9,7 +9,7 @@ port(
 		clk7m : in std_logic;
 		clk28m : in std_logic;
 		reset_n : in std_logic;
-		powerled_out : out unsigned (1 downto 0);
+		powerled_out : out std_ulogic_vector (1 downto 0);
 		diskled_out : out std_logic;	-- Use for SD access
 		oddled_out : out std_logic; -- Use for floppy access
 
