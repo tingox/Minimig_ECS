@@ -458,8 +458,8 @@ myhostcpu : entity work.TG68KdotC_Kernel
 		nReset => sdram_ready,
 		clkena_in => clk_enablez,
 		data_in => hostdata,
-		addr(23 downto 0) => hostaddr, 
-		addr(31 downto 24) => dummy2,
+		addr_out(23 downto 0) => hostaddr, 
+		addr_out(31 downto 24) => dummy2,
 		data_write => hostWR,
 		nWr => open, -- uses busstate instead?
 		nUDS => hostU,
