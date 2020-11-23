@@ -358,10 +358,10 @@ begin
   n_15khz <= '1'; -- sw(0) ; -- Default is '1' for 30kHz video out. set to '0' for 15kHz video.
 
   -- PS/2 Keyboard and Mouse definitions
-  ps2k_dat_in<=PS2_data1;
-  PS2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
-  ps2k_clk_in<=PS2_clk1;
-  PS2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
+  ps2k_dat_in <= ps2_data1;
+  ps2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
+  ps2k_clk_in <= ps2_clk1;
+  ps2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
 --  usb_fpga_pu_dp <= '1';
 --  usb_fpga_pu_dn <= '1';
 
