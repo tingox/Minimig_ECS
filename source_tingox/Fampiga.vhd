@@ -31,6 +31,7 @@ port(
 
 		vga_hsync 	: buffer std_logic;
 		vga_vsync 	: buffer std_logic;
+		n_15khz		: out std_logic;
 
 		-- PS/2
 		ps2k_clk_in : inout std_logic;
