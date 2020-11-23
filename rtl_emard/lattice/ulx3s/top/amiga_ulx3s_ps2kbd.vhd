@@ -348,7 +348,7 @@ begin
   end generate; -- G_not_usb_hid
 
   led(0) <= not n_joy2(0); -- red
-  led(3) <= not n_joy2(1); -- blue
+--  led(3) <= not n_joy2(1); -- blue
   led(2) <= not n_joy2(2); -- green
   led(1) <= not n_joy2(3); -- orange
 --  led(4) <= not n_joy2(4); -- red
