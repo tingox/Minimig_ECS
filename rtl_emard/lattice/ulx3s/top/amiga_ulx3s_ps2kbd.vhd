@@ -477,7 +477,7 @@ begin
     rs232_txd => slave_tx_o,
 		
     -- ESP32 wifi modem
---    amiga_rs232_rxd => wifi_txd,
+    amiga_rs232_rxd => wifi_txd,
 --    amiga_rs232_txd => wifi_rxd,
 		
     -- SD card interface
