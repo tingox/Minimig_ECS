@@ -152,7 +152,7 @@ architecture struct of amiga_ulx3s is
   signal n_joy1   : std_logic_vector(5 downto 0);
   signal n_joy2   : std_logic_vector(5 downto 0);
  
-  signal ps2k_clk_in : std_logic;
+  signal a_ps2k_clk_in : std_logic;
   signal ps2k_clk_out : std_logic;
   signal ps2k_dat_in : std_logic;
   signal ps2k_dat_out : std_logic;	
@@ -360,7 +360,7 @@ begin
   -- PS/2 Keyboard and Mouse definitions
   ps2k_dat_in <= ps2_data1;
   ps2_data1 <= '0' when ps2k_dat_out='0' else 'Z';
-  ps2k_clk_in <= ps2_clk1;
+  a_ps2k_clk_in <= ps2_clk1;
   ps2_clk1 <= '0' when ps2k_clk_out='0' else 'Z';	
 --  usb_fpga_pu_dp <= '1';
 --  usb_fpga_pu_dn <= '1';
@@ -453,7 +453,7 @@ begin
     n_15khz => n_15khz,
 
     -- PS/2
-    ps2k_clk_in => ps2k_clk_in,
+    ps2k_clk_in => a_ps2k_clk_in,
     ps2k_clk_out => ps2k_clk_out,
     ps2k_dat_in => ps2k_dat_in,
     ps2k_dat_out => ps2k_dat_out,
