@@ -247,7 +247,7 @@ pf68K_Kernel_inst: TG68KdotC_Kernel
         addr_out => cpuaddr,           	-- : buffer std_logic_vector(31 downto 0);
         data_write => data_write,     -- : out std_logic_vector(15 downto 0);
 		busstate => state,	  	  	-- : buffer std_logic_vector(1 downto 0);	
-        regin => open,          	-- : out std_logic_vector(31 downto 0);
+        regin_out => open,          	-- : out std_logic_vector(31 downto 0);
 		nWr => wr,			  	-- : out std_logic;
 		nUDS => uds_in,
 		nLDS => lds_in,	  			-- : out std_logic;
