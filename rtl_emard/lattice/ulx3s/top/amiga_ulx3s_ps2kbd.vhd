@@ -447,7 +447,7 @@ begin
     vga_r => red_u,
     vga_g => green_u,
     vga_b => blue_u,
---    vid_blank => videoblank,
+    vid_blank => videoblank,
     vga_hsync => hsync,
     vga_vsync => vsync,
     n_15khz => n_15khz,
